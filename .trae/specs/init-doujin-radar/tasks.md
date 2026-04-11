@@ -1,0 +1,33 @@
+# Tasks
+- [ ] Task 1: Initialize Project Architecture
+  - [ ] SubTask 1.1: 初始化 FastAPI 后端项目，集成已有框架和屏蔽词库。
+  - [ ] SubTask 1.2: 初始化 Vue3 前端项目，配置基础路由和状态管理。
+  - [ ] SubTask 1.3: 配置全局 CSS，引入 Material 3 Expressive 规范及 Aurora Neon/Liquid Glass 视觉风格的 CSS 变量和混入（mixins）。
+- [ ] Task 2: Implement AI API Config Module
+  - [ ] SubTask 2.1: 前端开发 API 配置表单（地址、模型、API Key）。
+  - [ ] SubTask 2.2: 后端开发连通性测试接口，兼容 OpenAI 和 Gemini 格式调用。
+  - [ ] SubTask 2.3: 前后端联调“测试连接”功能，仅测试通过后允许保存。
+  - [ ] SubTask 2.4: 后端实现数据清洗中间件，通过正则剥离返回数据中的 `<think>` 等思考标签。
+- [ ] Task 3: Implement Target Search & Select Module
+  - [ ] SubTask 3.1: 前端开发双模态智能搜索框 UI。
+  - [ ] SubTask 3.2: 后端实现搜索 API，支持按文本/名字查询列表，或按纯数字直接锁定。
+  - [ ] SubTask 3.3: 前端对接搜索逻辑，规则A展示含封面的列表/网格，规则B仅展示标题和JM号。
+- [ ] Task 4: Implement Rule Config Module
+  - [ ] SubTask 4.1: 前端开发【避雷清单】和【喜欢清单】的自定义输入组件（支持英文逗号分隔）。
+  - [ ] SubTask 4.2: 前端实现视觉隔离，“避雷”使用红/深色系，“喜欢”使用绿/亮色系。
+  - [ ] SubTask 4.3: 后端提供清单的保存与读取接口。
+- [ ] Task 5: Implement Core Identification Workflow
+  - [ ] SubTask 5.1: 后端编写数据拼装逻辑，整合标题、简介、作者、标签、评论及封面的 Base64/URL 转换。
+  - [ ] SubTask 5.2: 后端硬编码指定的 System Prompt。
+  - [ ] SubTask 5.3: 后端开发调用大模型生成鉴定的逻辑，开启 JSON 模式，并处理异常重试与回退。
+- [ ] Task 6: Implement Report Rendering UI
+  - [ ] SubTask 6.1: 前端开发鉴定结果卡片组件，融入 Aurora Neon / Liquid Glass 风格。
+  - [ ] SubTask 6.2: 前端实现标签颜色交互逻辑（避雷命中为霓虹红，喜欢命中为霓虹绿，未命中为半透明玻璃态）。
+  - [ ] SubTask 6.3: 前端集成 marked.js 及相关插件，解析并高亮渲染 `reasoning` 字段，确保首句使用 Blockquote 样式加粗放大展示。
+
+# Task Dependencies
+- [Task 2] depends on [Task 1]
+- [Task 3] depends on [Task 1]
+- [Task 4] depends on [Task 1]
+- [Task 5] depends on [Task 2, Task 3, Task 4]
+- [Task 6] depends on [Task 5]

@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--md-sys-color-primary);
+  --color-primary-container: var(--md-sys-color-primary-container);
+  --color-secondary: var(--md-sys-color-secondary);
+  --color-tertiary: var(--md-sys-color-tertiary);
+  --color-surface: var(--md-sys-color-surface);
+  --color-on-surface: var(--md-sys-color-on-surface);
+}
+
+:root {
+  /* Material 3 Expressive Colors (Neon-ish palette) */
+  --md-sys-color-primary: #ffb4a9;
+  --md-sys-color-on-primary: #690005;
+  --md-sys-color-primary-container: #ff5449;
+  --md-sys-color-secondary: #e7b4ff;
+  --md-sys-color-tertiary: #00e5ff;
+  --md-sys-color-surface: #1a0b2e;
+  --md-sys-color-on-surface: #e6e1e5;
+  
+  /* Aurora Neon Gradients */
+  --aurora-bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  --aurora-glow-1: radial-gradient(circle at 15% 50%, rgba(255, 84, 73, 0.4), transparent 50%);
+  --aurora-glow-2: radial-gradient(circle at 85% 30%, rgba(0, 229, 255, 0.4), transparent 50%);
+  --aurora-glow-3: radial-gradient(circle at 50% 80%, rgba(231, 180, 255, 0.4), transparent 50%);
+
+  /* Liquid Glass */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-blur: 12px;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--aurora-bg);
+  color: var(--md-sys-color-on-surface);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Aurora Glow Layers */
+body::before, body::after, .aurora-layer {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  background: var(--aurora-glow-1);
+}
+
+body::after {
+  background: var(--aurora-glow-2);
+}
+
+.aurora-layer {
+  background: var(--aurora-glow-3);
+}
+
+/* Glassmorphism Utilities */
+.liquid-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: 1rem;
+}
+
+/* Neon Text Utilities */
+.text-neon-primary {
+  color: var(--md-sys-color-primary);
+  text-shadow: 0 0 8px rgba(255, 180, 169, 0.6);
+}
+
+.text-neon-tertiary {
+  color: var(--md-sys-color-tertiary);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
