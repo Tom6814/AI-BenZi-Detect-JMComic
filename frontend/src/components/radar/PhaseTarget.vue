@@ -13,7 +13,7 @@ const initiateScan = async () => {
     // Simulated deep scan delay
     await new Promise(r => setTimeout(r, 1500))
     
-    const res = await fetch(`http://localhost:8000/api/identify`, {
+    const res = await fetch(`/api/identify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: query.value })

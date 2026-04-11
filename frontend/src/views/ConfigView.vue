@@ -11,7 +11,7 @@ const testConnection = async () => {
   loading.value = true
   result.value = null
   try {
-    const res = await fetch('http://localhost:8000/api/config/test', {
+    const res = await fetch('/api/config/test', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

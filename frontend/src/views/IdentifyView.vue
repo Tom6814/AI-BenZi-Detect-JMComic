@@ -41,7 +41,7 @@ const loadData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await fetch('http://localhost:8000/api/identify', {
+    const res = await fetch('/api/identify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

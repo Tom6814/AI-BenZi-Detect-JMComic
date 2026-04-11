@@ -18,7 +18,7 @@ const testConnection = async () => {
   errorMsg.value = ''
   
   try {
-    const res = await fetch('http://localhost:8000/api/config/test', {
+    const res = await fetch('/api/config/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

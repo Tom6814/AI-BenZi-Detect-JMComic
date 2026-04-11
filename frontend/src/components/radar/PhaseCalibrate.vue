@@ -10,7 +10,7 @@ const loading = ref(false)
 
 const loadRules = async () => {
   try {
-    const res = await fetch('http://localhost:8000/api/rules')
+    const res = await fetch('/api/rules')
     if (res.ok) {
       const data = await res.json()
       avoidList.value = data.avoid || []
@@ -52,7 +52,7 @@ const removeLike = (item) => {
 const lockCalibration = async () => {
   loading.value = true
   try {
-    await fetch('http://localhost:8000/api/rules', {
+    await fetch('/api/rules', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
