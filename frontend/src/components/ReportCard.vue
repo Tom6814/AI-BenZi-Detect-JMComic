@@ -1,46 +1,78 @@
 <template>
-  <div class="report-card liquid-glass p-6 rounded-xl">
-    <div class="mb-8">
-      <h3 class="text-xl font-bold mb-4 text-white tracking-wide">需要避免 (Avoid)</h3>
-      <div class="flex flex-wrap gap-3">
-        <span 
-          v-for="info in data.avoid" 
-          :key="info.tag"
-          :class="['px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300', 
-            info.contains 
-              ? 'bg-[rgba(255,0,0,0.1)] text-[#ff4d4d] border border-[#ff4d4d] shadow-[0_0_12px_rgba(255,77,77,0.8)]' 
-              : 'liquid-glass text-white/70 hover:text-white']"
-          :title="info.reasoning"
-        >
-          {{ info.tag }} <span v-if="info.probability" class="opacity-80 ml-1 text-[10px]">{{ (info.probability * 100).toFixed(0) }}%</span>
-        </span>
+  <div class="bg-[var(--color-md-sys-surface)] md-elevation-1 rounded-[24px] p-6 md:p-8 flex flex-col gap-8 w-full transition-shadow hover:md-elevation-2">
+    
+    <!-- Header -->
+    <div class="flex items-center gap-4 pb-4 border-b border-[var(--color-md-sys-surface-variant)]">
+      <div class="p-3 bg-[var(--color-md-sys-secondary-container)] text-[var(--color-md-sys-on-secondary-container)] rounded-full">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+      <div>
+        <h3 class="text-[22px] font-normal leading-[28px] text-[var(--color-md-sys-on-surface)]" style="font-family: 'Google Sans', sans-serif;">
+          Evaluation Report
+        </h3>
+        <p class="text-sm text-[var(--color-md-sys-on-surface-variant)]">Based on your configured preferences</p>
       </div>
     </div>
 
-    <div class="mb-8">
-      <h3 class="text-xl font-bold mb-4 text-white tracking-wide">推荐 (Like)</h3>
-      <div class="flex flex-wrap gap-3">
-        <span 
-          v-for="info in data.like" 
+    <!-- Red Flags Section -->
+    <div class="flex flex-col gap-4">
+      <h4 class="text-sm font-medium tracking-[0.1px] text-[var(--color-md-sys-error)] uppercase">Avoid (Red Flags)</h4>
+      <div class="flex flex-wrap gap-2">
+        <span
+          v-for="info in data.avoid"
           :key="info.tag"
-          :class="['px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300', 
-            info.contains 
-              ? 'bg-[rgba(0,255,0,0.1)] text-[#00ff00] border border-[#00ff00] shadow-[0_0_12px_rgba(0,255,0,0.8)]' 
-              : 'liquid-glass text-white/70 hover:text-white']"
+          :class="['inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300',
+            info.contains
+              ? 'bg-[var(--color-md-sys-error-container)] text-[var(--color-md-sys-on-error-container)] border border-[var(--color-md-sys-error)]'
+              : 'bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] border border-[var(--color-md-sys-outline-variant)]']"
           :title="info.reasoning"
         >
-          {{ info.tag }} <span v-if="info.probability" class="opacity-80 ml-1 text-[10px]">{{ (info.probability * 100).toFixed(0) }}%</span>
+          <svg v-if="info.contains" class="w-4 h-4 text-[var(--color-md-sys-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          
+          {{ info.tag }} 
+          <span v-if="info.probability" class="opacity-70 text-xs font-normal">
+            {{ (info.probability * 100).toFixed(0) }}%
+          </span>
         </span>
+        <div v-if="!data.avoid || data.avoid.length === 0" class="text-sm text-[var(--color-md-sys-on-surface-variant)] italic">No criteria set</div>
       </div>
     </div>
 
-    <div>
-      <h3 class="text-xl font-bold mb-4 text-white tracking-wide">原因分析 (Reasoning)</h3>
-      <div 
-        class="reasoning-content text-white/90"
+    <!-- Favorites Section -->
+    <div class="flex flex-col gap-4">
+      <h4 class="text-sm font-medium tracking-[0.1px] text-[var(--color-md-sys-safe)] uppercase">Like (Favorites)</h4>
+      <div class="flex flex-wrap gap-2">
+        <span
+          v-for="info in data.like"
+          :key="info.tag"
+          :class="['inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300',
+            info.contains
+              ? 'bg-[var(--color-md-sys-safe-container)] text-[var(--color-md-sys-on-safe-container)] border border-[var(--color-md-sys-safe)]'
+              : 'bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] border border-[var(--color-md-sys-outline-variant)]']"
+          :title="info.reasoning"
+        >
+          <svg v-if="info.contains" class="w-4 h-4 text-[var(--color-md-sys-safe)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+          
+          {{ info.tag }} 
+          <span v-if="info.probability" class="opacity-70 text-xs font-normal">
+            {{ (info.probability * 100).toFixed(0) }}%
+          </span>
+        </span>
+        <div v-if="!data.like || data.like.length === 0" class="text-sm text-[var(--color-md-sys-on-surface-variant)] italic">No criteria set</div>
+      </div>
+    </div>
+
+    <!-- Reasoning Section -->
+    <div class="flex flex-col gap-4 mt-4">
+      <h4 class="text-sm font-medium tracking-[0.1px] text-[var(--color-md-sys-on-surface-variant)] uppercase">AI Reasoning</h4>
+      <div
+        class="reasoning-content text-[var(--color-md-sys-on-surface)] bg-[var(--color-md-sys-surface-variant)] p-6 rounded-[16px]"
         v-html="parsedReasoning"
       ></div>
     </div>
+    
   </div>
 </template>
 
@@ -52,37 +84,39 @@ const props = defineProps({
   data: {
     type: Object,
     required: true,
-    default: () => ({ avoid: {}, like: {}, reasoning: '' })
+    default: () => ({ avoid: [], like: [], reasoning: '' })
   }
 })
 
 const parsedReasoning = computed(() => {
   if (!props.data.reasoning) return ''
-  
+
   const sentenceRegex = /^([^.!?。！？]+[.!?。！？]+)(?:\s|\n|$)([\s\S]*)$/
   const match = props.data.reasoning.match(sentenceRegex)
-  
+
   let html = ''
   if (match) {
     const firstSentence = match[1]
     const rest = match[2]
-    
+
     const markdownStr = `<div class="first-sentence-blockquote">${firstSentence}</div>\n\n${rest}`
     html = marked.parse(markdownStr)
   } else {
     const markdownStr = `<div class="first-sentence-blockquote">${props.data.reasoning}</div>`
     html = marked.parse(markdownStr)
   }
-  
+
   return html
 })
 </script>
 
 <style>
-/* Base styles for markdown content */
+/* Base styles for markdown content in MD3 */
 .reasoning-content p {
   margin-bottom: 1rem;
-  line-height: 1.7;
+  line-height: 1.5;
+  font-size: 16px;
+  letter-spacing: 0.5px;
 }
 .reasoning-content ul {
   list-style-type: disc;
@@ -95,29 +129,22 @@ const parsedReasoning = computed(() => {
   margin-bottom: 1rem;
 }
 .reasoning-content strong {
-  color: #fff;
-  font-weight: 600;
-}
-.reasoning-content code {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
-  font-family: monospace;
-  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--color-md-sys-primary);
 }
 
-/* CSS to style the first sentence as enlarged bold Blockquote */
+/* Styled Blockquote for first sentence (MD3 flair) */
 .reasoning-content .first-sentence-blockquote {
   display: block;
-  font-size: 1.3rem;
-  font-weight: 700;
-  padding: 1.2rem 1.5rem;
+  font-family: 'Google Sans', sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
+  padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
-  border-left: 4px solid var(--md-sys-color-tertiary, #00e5ff);
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0 0.5rem 0.5rem 0;
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
-  line-height: 1.6;
+  border-left: 4px solid var(--color-md-sys-primary);
+  color: var(--color-md-sys-on-surface);
+  background: var(--color-md-sys-surface);
+  border-radius: 0 8px 8px 0;
 }
 </style>

@@ -18,29 +18,24 @@ const handleSearchSuccess = (data) => {
 </script>
 
 <template>
-  <div class="relative w-screen h-screen overflow-hidden font-sans">
-    <div class="aurora-bg"></div>
+  <div class="relative w-screen h-screen overflow-hidden bg-[var(--color-md-sys-background)] text-[var(--color-md-sys-on-background)] flex items-center justify-center font-sans">
+    
+    <!-- Background Decorator -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-md-sys-primary-container)_0%,_transparent_50%),radial-gradient(ellipse_at_bottom_left,_var(--color-md-sys-tertiary-container)_0%,_transparent_50%)] opacity-50 z-0"></div>
 
-    <div class="absolute inset-0 flex items-center justify-center p-4 md:p-8">
+    <div class="absolute inset-0 flex items-center justify-center p-4 md:p-8 z-10">
       
-      <!-- Main Morphing Glass Panel -->
+      <!-- Main Container (MD3 Surface) -->
       <div 
-        class="glass-panel relative flex flex-col overflow-hidden transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"
+        class="bg-[var(--color-md-sys-surface)] md-elevation-3 relative flex flex-col overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] border border-[var(--color-md-sys-outline-variant)]"
         :class="{
-          'w-[500px] h-[600px] rounded-[40px]': phase === 'INIT',
-          'w-[900px] h-[700px] rounded-[50px]': phase === 'CALIBRATE',
-          'w-[600px] h-[600px] rounded-[40px]': phase === 'TARGET',
-          'w-[1000px] h-[85vh] rounded-[40px]': phase === 'REPORT'
+          'w-[500px] h-[550px] md-shape-extra-large': phase === 'INIT',
+          'w-[900px] h-[700px] md-shape-extra-large': phase === 'CALIBRATE',
+          'w-[600px] h-[500px] md-shape-extra-large': phase === 'TARGET',
+          'w-[1000px] h-[85vh] md-shape-extra-large': phase === 'REPORT'
         }"
       >
-        <!-- Top Left Decorator -->
-        <div class="absolute top-8 left-8 w-2 h-2 rounded-full bg-white/30 animate-pulse z-0 pointer-events-none"></div>
-        <!-- Top Right Decorator -->
-        <div class="absolute top-8 right-8 text-[10px] tracking-[0.3em] text-white/20 uppercase z-0 pointer-events-none">
-          SYS.{{ phase }}
-        </div>
-
-        <transition name="phase-fade" mode="out-in">
+        <transition name="md-fade" mode="out-in">
           <PhaseInit 
             v-if="phase === 'INIT'" 
             @next="toCalibrate" 
@@ -61,25 +56,25 @@ const handleSearchSuccess = (data) => {
             @reset="toTarget"
           />
         </transition>
-
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.phase-fade-enter-active,
-.phase-fade-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+/* MD3 Standard Transition for full-screen changes */
+.md-fade-enter-active,
+.md-fade-leave-active {
+  transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), transform 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.phase-fade-enter-from {
+.md-fade-enter-from {
   opacity: 0;
-  transform: scale(0.95);
+  transform: translateY(20px) scale(0.98);
 }
 
-.phase-fade-leave-to {
+.md-fade-leave-to {
   opacity: 0;
-  transform: scale(1.05);
+  transform: translateY(-20px) scale(0.98);
 }
 </style>
