@@ -14,15 +14,36 @@ import { RouterLink, RouterView } from 'vue-router'
         </div>
         
         <div class="flex md:flex-col gap-4">
-          <RouterLink 
-            to="/" 
+          <RouterLink
+            to="/"
             class="px-4 py-2 rounded-lg transition-all duration-300 hover:bg-[rgba(255,255,255,0.1)] active:scale-95 text-white/80 hover:text-white"
             active-class="bg-[rgba(255,255,255,0.15)] text-neon-primary font-medium"
           >
             Home
           </RouterLink>
-          <RouterLink 
-            to="/about" 
+          <RouterLink
+            to="/search"
+            class="px-4 py-2 rounded-lg transition-all duration-300 hover:bg-[rgba(255,255,255,0.1)] active:scale-95 text-white/80 hover:text-white"
+            active-class="bg-[rgba(255,255,255,0.15)] text-neon-primary font-medium"
+          >
+            Search
+          </RouterLink>
+          <RouterLink
+            to="/rules"
+            class="px-4 py-2 rounded-lg transition-all duration-300 hover:bg-[rgba(255,255,255,0.1)] active:scale-95 text-white/80 hover:text-white"
+            active-class="bg-[rgba(255,255,255,0.15)] text-neon-primary font-medium"
+          >
+            Rules
+          </RouterLink>
+          <RouterLink
+            to="/config"
+            class="px-4 py-2 rounded-lg transition-all duration-300 hover:bg-[rgba(255,255,255,0.1)] active:scale-95 text-white/80 hover:text-white"
+            active-class="bg-[rgba(255,255,255,0.15)] text-neon-primary font-medium"
+          >
+            Config
+          </RouterLink>
+          <RouterLink
+            to="/about"
             class="px-4 py-2 rounded-lg transition-all duration-300 hover:bg-[rgba(255,255,255,0.1)] active:scale-95 text-white/80 hover:text-white"
             active-class="bg-[rgba(255,255,255,0.15)] text-neon-primary font-medium"
           >
