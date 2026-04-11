@@ -3,6 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
+    name: 'Wizard',
+    component: () => import('../views/WizardView.vue')
+  },
+  {
+    path: '/old',
     component: () => import('../layouts/DefaultLayout.vue'),
     children: [
       {
