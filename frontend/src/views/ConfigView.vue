@@ -1,4 +1,5 @@
 <script setup>
+import { getApiUrl } from '../lib/utils.js'
 import { ref } from 'vue'
 
 const apiUrl = ref('http://localhost:8000')
@@ -11,7 +12,7 @@ const testConnection = async () => {
   loading.value = true
   result.value = null
   try {
-    const res = await fetch('/api/config/test', {
+    const res = await fetch(getApiUrl('/api/config/test'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

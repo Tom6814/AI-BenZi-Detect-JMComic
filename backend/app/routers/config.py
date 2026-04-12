@@ -10,7 +10,9 @@ router = APIRouter(
     tags=["config"]
 )
 
-CONFIG_FILE = "data/config.json"
+import os
+DATA_DIR = os.environ.get("DATA_DIR", "data")
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 
 class ConnectionTestRequest(BaseModel):
     provider: str  # "openai" or "gemini"
