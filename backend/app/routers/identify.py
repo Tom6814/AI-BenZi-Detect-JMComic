@@ -33,7 +33,9 @@ class IdentifyResponse(BaseModel):
     like: List[TagResult]
     reasoning: str
 
-CONFIG_FILE = "data/config.json"
+import os
+DATA_DIR = os.environ.get("DATA_DIR", "data")
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 
 def read_config():
     if not os.path.exists(CONFIG_FILE):
@@ -150,8 +152,11 @@ async def identify_content(req: IdentifyRequest):
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             if provider == "openai":
-                url = base_url or "https://api.openai.com/v1"
-                url = f"{url.rstrip('/')}/chat/completions"
+                base = base_url.rstrip('/') if base_url else "https://api.openai.com/v1"
+                if base != "https://api.openai.com/v1" and not base.endswith("/v1") and "/v1/" not in base:
+                    if "grsai" in base.lower() or "openai" in base.lower():
+                        base = f"{base}/v1"
+                url = f"{base}/chat/completions"
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
@@ -167,18 +172,20 @@ async def identify_content(req: IdentifyRequest):
                 resp = await client.post(url, headers=headers, json=payload)
                 resp.raise_for_status()
                 data = resp.json()
+                # Check GRSAI errors
+                if isinstance(data, dict) and data.get("code") == -1:
+                    raise Exception(data.get("msg", "Unknown API error from proxy"))
                 content = data["choices"][0]["message"]["content"]
-                
+
             elif provider == "gemini":
                 base = base_url.rstrip('/') if base_url else "https://generativelanguage.googleapis.com/v1beta"
 
-                # 兼容 GRSAI 等第三方 OpenAI 格式的 Gemini API (如：使用 chat/completions 调用 gemini)
                 if "grsai" in base.lower() or "openai" in base.lower() or base.endswith("/v1") or "/v1/" in base:
-                    if "grsai" in base.lower() and not base.endswith("/v1") and "/v1/" not in base:
-                        url = f"{base}/v1/chat/completions"
-                    else:
-                        url = f"{base}/chat/completions"
-                        
+                    if base != "https://api.openai.com/v1" and not base.endswith("/v1") and "/v1/" not in base:
+                        if "grsai" in base.lower() or "openai" in base.lower():
+                            base = f"{base}/v1"
+                    url = f"{base}/chat/completions"
+
                     headers = {
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json"
@@ -194,9 +201,11 @@ async def identify_content(req: IdentifyRequest):
                     resp = await client.post(url, headers=headers, json=payload)
                     resp.raise_for_status()
                     data = resp.json()
+                    # Check GRSAI errors
+                    if isinstance(data, dict) and data.get("code") == -1:
+                        raise Exception(data.get("msg", "Unknown API error from proxy"))
                     content = data["choices"][0]["message"]["content"]
                 else:
-                    # 标准的 Google 原生 Gemini 格式
                     url = f"{base}/models/{model}:generateContent?key={api_key}"
                     headers = {"Content-Type": "application/json"}
                     payload = {
@@ -214,7 +223,6 @@ async def identify_content(req: IdentifyRequest):
                     resp.raise_for_status()
                     data = resp.json()
                     content = data["candidates"][0]["content"]["parts"][0]["text"]
-                
             else:
                 return get_mock_response(rules)
                 
