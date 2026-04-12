@@ -18,6 +18,16 @@ class ConnectionTestRequest(BaseModel):
     base_url: str = None
     model: str = None
 
+@router.get("/get")
+def get_config():
+    if not os.path.exists(CONFIG_FILE):
+        return {}
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
 @router.post("/save")
 def save_config(req: ConnectionTestRequest):
     os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)

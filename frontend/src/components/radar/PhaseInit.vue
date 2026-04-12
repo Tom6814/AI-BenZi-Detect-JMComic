@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const emit = defineEmits(['next'])
 const provider = ref('openai')
@@ -8,6 +8,23 @@ const baseUrl = ref('')
 const model = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/config/get')
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.api_key) {
+        provider.value = data.provider || 'openai'
+        apiKey.value = data.api_key || ''
+        baseUrl.value = data.base_url || ''
+        model.value = data.model || ''
+      }
+    }
+  } catch (e) {
+    console.warn('Could not load existing config', e)
+  }
+})
 
 const testConnection = async () => {
   if (!apiKey.value) {
