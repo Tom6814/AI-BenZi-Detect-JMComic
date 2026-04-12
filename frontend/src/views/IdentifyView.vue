@@ -30,6 +30,7 @@
 </template>
 
 <script setup>
+import { getApiUrl } from '../lib/utils.js'
 import { ref } from 'vue'
 import ReportCard from '../components/ReportCard.vue'
 
@@ -41,7 +42,7 @@ const loadData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await fetch('/api/identify', {
+    const res = await fetch(getApiUrl('/api/identify'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

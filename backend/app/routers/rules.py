@@ -13,7 +13,9 @@ class RulesConfig(BaseModel):
     avoid: List[str]
     like: List[str]
 
-DATA_FILE = "data/rules.json"
+import os
+DATA_DIR = os.environ.get("DATA_DIR", "data")
+DATA_FILE = os.path.join(DATA_DIR, "rules.json")
 
 def get_default_rules() -> RulesConfig:
     return RulesConfig(avoid=[], like=[])

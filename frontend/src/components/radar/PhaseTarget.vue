@@ -1,4 +1,5 @@
 <script setup>
+import { getApiUrl } from '../../lib/utils.js'
 import { ref } from 'vue'
 
 const emit = defineEmits(['search-success', 'back'])
@@ -20,7 +21,7 @@ const initiateScan = async (targetId = null) => {
   if (targetId || /^\d+$/.test(searchQuery)) {
     analyzing.value = true
     try {
-      const res = await fetch(`/api/identify`, {
+      const res = await fetch(getApiUrl(`/api/identify`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: searchQuery })
@@ -44,7 +45,7 @@ const initiateScan = async (targetId = null) => {
   } else {
     // Otherwise, search JM
     try {
-      const res = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}`)
+      const res = await fetch(getApiUrl(`/api/search?query=${encodeURIComponent(searchQuery)}`))
       if (res.ok) {
         const data = await res.json()
         if (data.type === 'list') {
