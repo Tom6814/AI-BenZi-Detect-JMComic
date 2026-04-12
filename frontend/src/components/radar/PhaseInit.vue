@@ -73,7 +73,7 @@ const testConnection = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center w-full h-full p-8 md:p-12 relative bg-[var(--color-md-sys-surface)]">
+  <div class="flex flex-col items-center justify-center w-full min-h-full overflow-y-auto p-8 md:p-12 relative bg-[var(--color-md-sys-surface)]">
     <div class="text-center mb-10 w-full max-w-lg">
       <h2 class="text-4xl font-normal text-[var(--color-md-sys-on-surface)] mb-4 tracking-tight" style="font-family: 'Google Sans', 'Roboto', sans-serif;">
         Setup Connection
@@ -84,7 +84,7 @@ const testConnection = async () => {
     </div>
 
     <!-- MD3 Segmented Button (Provider Toggle) -->
-    <div class="flex border border-[var(--color-md-sys-outline)] rounded-full mb-10 overflow-hidden bg-transparent">
+    <div class="flex shrink-0 border border-[var(--color-md-sys-outline)] rounded-full mb-10 overflow-hidden bg-transparent">
       <button 
         @click="provider = 'openai'" 
         class="px-8 py-2.5 text-sm font-medium transition-colors md-ripple relative z-10"
