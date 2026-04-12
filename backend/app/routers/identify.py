@@ -111,6 +111,8 @@ async def identify_content(req: IdentifyRequest):
             req.cover_url = jm_album.get("cover_url", req.cover_url)
             # Use the fetched top 10 comments
             req.comments = jm_album.get("comments", [])
+        else:
+            raise HTTPException(status_code=404, detail="JM 图集未找到，可能是 ID 错误或被隐藏。")
 
     # 组合用户 Prompt
     user_prompt = f"""

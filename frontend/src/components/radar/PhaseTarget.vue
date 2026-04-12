@@ -29,11 +29,11 @@ const initiateScan = async (targetId = null) => {
         emit('search-success', data)
       } else {
         const errData = await res.json().catch(() => ({}))
-        errorMsg.value = errData.detail || 'Identify failed: Server returned an error'
+        errorMsg.value = errData.detail || `Identify failed: Server returned ${res.status}`
         console.error('Identify failed', res.status)
       }
     } catch (err) {
-      errorMsg.value = 'Network error during identification'
+      errorMsg.value = `Network error during identification: ${err.message}`
       console.error(err)
     } finally {
       loading.value = false
