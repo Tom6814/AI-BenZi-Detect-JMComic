@@ -17,32 +17,38 @@ class ConnectionTestRequest(BaseModel):
 @router.post("/test")
 async def test_connection(req: ConnectionTestRequest):
     if req.provider.lower() == "openai":
-        url = req.base_url or "https://api.openai.com/v1"
-        url = f"{url.rstrip('/')}/models"
+        # 对于 OpenAI，同样使用真实的 chat/completions 接口测试连通性，防止部分代理不支持 /models
+        base = req.base_url.rstrip('/') if req.base_url else "https://api.openai.com/v1"
+        test_url = f"{base}/chat/completions"
+        model_name = req.model or "gpt-4o"
+        
         headers = {
-            "Authorization": f"Bearer {req.api_key}"
+            "Authorization": f"Bearer {req.api_key}",
+            "Content-Type": "application/json"
         }
+        
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 5
+        }
+        
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(url, headers=headers)
+                resp = await client.post(test_url, headers=headers, json=payload)
                 if resp.status_code == 200:
                     return {"status": "success", "message": "OpenAI connection successful"}
                 else:
                     raise HTTPException(status_code=400, detail=f"OpenAI connection failed: {resp.text}")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"OpenAI connection error: {str(e)}")
-            
+
     elif req.provider.lower() == "gemini":
-        url = req.base_url or "https://generativelanguage.googleapis.com/v1beta"
-        # 修正 Gemini API 验证地址格式
-        url = f"{url.rstrip('/')}/models?key={req.api_key}"
-        
-        # 很多代理中转站并不支持 /models 端点，我们使用最基础的模型生成请求来做连通性测试
-        # 构造简单的 generateContent 请求
+        # 对于 Gemini，使用真实的 generateContent 请求测试连通性
         base = req.base_url.rstrip('/') if req.base_url else "https://generativelanguage.googleapis.com/v1beta"
         model_name = req.model or "gemini-1.5-pro"
         test_url = f"{base}/models/{model_name}:generateContent?key={req.api_key}"
-        
+
         payload = {
             "contents": [{"parts": [{"text": "Hello"}]}]
         }
