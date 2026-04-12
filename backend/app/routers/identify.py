@@ -146,24 +146,46 @@ async def identify_content(req: IdentifyRequest):
                 content = data["choices"][0]["message"]["content"]
                 
             elif provider == "gemini":
-                url = base_url or "https://generativelanguage.googleapis.com/v1beta"
-                url = f"{url.rstrip('/')}/models/{model}:generateContent?key={api_key}"
-                headers = {"Content-Type": "application/json"}
-                payload = {
-                    "systemInstruction": {
-                        "parts": [{"text": SYSTEM_PROMPT}]
-                    },
-                    "contents": [
-                        {"role": "user", "parts": [{"text": user_prompt}]}
-                    ],
-                    "generationConfig": {
-                        "responseMimeType": "application/json"
+                base = base_url.rstrip('/') if base_url else "https://generativelanguage.googleapis.com/v1beta"
+                
+                # 兼容 GRSAI 等第三方 OpenAI 格式的 Gemini API (如：使用 chat/completions 调用 gemini)
+                if "openai" in base.lower() or base.endswith("/v1") or "/v1/" in base:
+                    url = f"{base}/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
                     }
-                }
-                resp = await client.post(url, headers=headers, json=payload)
-                resp.raise_for_status()
-                data = resp.json()
-                content = data["candidates"][0]["content"]["parts"][0]["text"]
+                    payload = {
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "response_format": {"type": "json_object"}
+                    }
+                    resp = await client.post(url, headers=headers, json=payload)
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                else:
+                    # 标准的 Google 原生 Gemini 格式
+                    url = f"{base}/models/{model}:generateContent?key={api_key}"
+                    headers = {"Content-Type": "application/json"}
+                    payload = {
+                        "systemInstruction": {
+                            "parts": [{"text": SYSTEM_PROMPT}]
+                        },
+                        "contents": [
+                            {"role": "user", "parts": [{"text": user_prompt}]}
+                        ],
+                        "generationConfig": {
+                            "responseMimeType": "application/json"
+                        }
+                    }
+                    resp = await client.post(url, headers=headers, json=payload)
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["candidates"][0]["content"]["parts"][0]["text"]
                 
             else:
                 return get_mock_response(rules)
