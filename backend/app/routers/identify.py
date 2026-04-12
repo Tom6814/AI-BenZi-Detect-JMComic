@@ -109,18 +109,23 @@ async def identify_content(req: IdentifyRequest):
             req.description = jm_album.get("description", req.description)
             req.tags = jm_album.get("tags", req.tags)
             req.cover_url = jm_album.get("cover_url", req.cover_url)
-            # Comments are harder to fetch in simple script, leaving empty or mock for now
-            req.comments = []
+            # Use the fetched top 10 comments
+            req.comments = jm_album.get("comments", [])
 
     # 组合用户 Prompt
     user_prompt = f"""
+请基于以下通过 JM API 爬取到的真实本子数据进行专业鉴定。
+
 作品信息：
-- 标题：{req.title}
-- 作者：{req.author}
+- 标题：{req.title}（可能是生肉或汉化名，请综合推测）
+- 作者：{req.author}（如为多作者请综合考虑，如有需要，可利用你的知识库检索该作者其他作品风格）
 - 标签：{', '.join(req.tags)}
 - 简介：{req.description}
-- 封面URL：{req.cover_url}
-- 评论：{', '.join(req.comments) if req.comments else '无评论'}
+- 封面URL：{req.cover_url}（如能分析图片请分析，如不能请依据标题标签推理）
+- 评论区精选（点赞数最高的前10条）：
+{chr(10).join(f"- {c}" for c in req.comments) if req.comments else '无评论'}
+
+注意：评论中可能包含推销广告或抖机灵等无用信息，请自动过滤，只提取其中关于剧情走向、角色命运的真实反馈（即使是黑话或隐喻）。
 
 需要鉴定的规则清单：
 - 避雷清单 (avoid)：{', '.join(rules.avoid) if rules.avoid else '无'}
