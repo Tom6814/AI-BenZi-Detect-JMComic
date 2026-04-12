@@ -1,0 +1,6 @@
+{
+  "provider": "gemini",
+  "api_key": "sk-43ae3259c36b47e9808a8286f9a739ae",
+  "base_url": "https://grsaiapi.com",
+  "model": "gemini-3.1-pro"
+}

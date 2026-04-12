@@ -218,12 +218,24 @@ async def identify_content(req: IdentifyRequest):
             
             # 尝试解析 JSON
             try:
+                # Some models might return markdown code blocks, e.g. ```json\n{...}\n```
+                content = content.strip()
+                if content.startswith("```json"):
+                    content = content[7:]
+                if content.startswith("```"):
+                    content = content[3:]
+                if content.endswith("```"):
+                    content = content[:-3]
+                content = content.strip()
+                
                 result = json.loads(content)
                 return result
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail="AI 返回的格式不是有效的 JSON")
-                
+
     except Exception as e:
         print(f"AI 调用失败: {str(e)}")
-        # 失败时回退到 Mock 数据
-        return get_mock_response(rules)
+        # If it's a known HTTP exception, re-raise it so the frontend can display the error
+        if isinstance(e, httpx.HTTPStatusError):
+            raise HTTPException(status_code=e.response.status_code, detail=f"API Error: {e.response.text}")
+        raise HTTPException(status_code=500, detail=f"内部错误: {str(e)}")

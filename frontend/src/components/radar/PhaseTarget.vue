@@ -6,13 +6,15 @@ const query = ref('')
 const loading = ref(false)
 const searchResults = ref([])
 const hasSearched = ref(false)
+const errorMsg = ref('')
 
 const initiateScan = async (targetId = null) => {
   const searchQuery = targetId || query.value.trim()
   if (!searchQuery) return
-  
+
   loading.value = true
-  
+  errorMsg.value = ''
+
   // If it's pure number or an explicit ID was passed, identify directly
   if (targetId || /^\d+$/.test(searchQuery)) {
     try {
@@ -21,14 +23,17 @@ const initiateScan = async (targetId = null) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: searchQuery })
       })
-      
+
       if (res.ok) {
         const data = await res.json()
         emit('search-success', data)
       } else {
-        console.error('Identify failed')
+        const errData = await res.json().catch(() => ({}))
+        errorMsg.value = errData.detail || 'Identify failed: Server returned an error'
+        console.error('Identify failed', res.status)
       }
     } catch (err) {
+      errorMsg.value = 'Network error during identification'
       console.error(err)
     } finally {
       loading.value = false
@@ -46,8 +51,11 @@ const initiateScan = async (targetId = null) => {
           // Fallback if somehow it returns exact
           initiateScan(data.id.toString())
         }
+      } else {
+        errorMsg.value = 'Search failed: Server returned an error'
       }
     } catch (err) {
+      errorMsg.value = 'Network error during search'
       console.error(err)
     } finally {
       loading.value = false
@@ -58,6 +66,15 @@ const initiateScan = async (targetId = null) => {
 
 <template>
   <div class="flex flex-col items-center w-full h-full p-8 md:p-12 relative bg-[var(--color-md-sys-surface)] overflow-y-auto">
+
+    <!-- Global Error Toast overlay -->
+    <div v-if="errorMsg" class="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--color-md-sys-error-container)] text-[var(--color-md-sys-on-error-container)] px-6 py-3 rounded-full md-elevation-2 flex items-center gap-3 animate-[fade-in-down_0.3s_ease-out]">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span class="text-sm font-medium">{{ errorMsg }}</span>
+      <button @click="errorMsg = ''" class="ml-2 opacity-70 hover:opacity-100">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
 
     <div class="absolute top-8 left-8 md:top-12 md:left-12 z-20">
       <button @click="emit('back')" class="p-2 rounded-full text-[var(--color-md-sys-on-surface-variant)] hover:bg-[var(--color-md-sys-surface-variant)] transition-colors md-ripple flex items-center justify-center">
