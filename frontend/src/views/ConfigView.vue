@@ -1,7 +1,9 @@
 <script setup>
+import { getApiUrl } from '../lib/utils.js'
 import { ref } from 'vue'
 
-const apiUrl = ref('http://localhost:8000')
+const provider = ref('openai')
+const apiUrl = ref('')
 const model = ref('gpt-4o')
 const apiKey = ref('')
 const loading = ref(false)
@@ -11,15 +13,16 @@ const testConnection = async () => {
   loading.value = true
   result.value = null
   try {
-    const res = await fetch('/api/config/test', {
+    const res = await fetch(getApiUrl('/api/config/test'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        api_url: apiUrl.value,
-        model: model.value,
-        api_key: apiKey.value
+        provider: provider.value,
+        api_key: apiKey.value,
+        base_url: apiUrl.value || undefined,
+        model: model.value || undefined
       })
     })
     
@@ -45,6 +48,17 @@ const testConnection = async () => {
     </header>
 
     <div class="liquid-glass p-6 space-y-6">
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-neon-primary">Provider</label>
+        <select
+          v-model="provider"
+          class="w-full bg-[rgba(0,0,0,0.3)] border border-[rgba(255,255,255,0.1)] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-neon-tertiary focus:ring-1 focus:ring-neon-tertiary transition-colors"
+        >
+          <option value="openai">openai</option>
+          <option value="gemini">gemini</option>
+        </select>
+      </div>
+
       <div class="space-y-2">
         <label class="block text-sm font-medium text-neon-primary">API URL</label>
         <input 

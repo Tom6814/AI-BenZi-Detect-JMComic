@@ -1,4 +1,5 @@
 <script setup>
+import { getApiUrl } from '../../lib/utils.js'
 import { ref, onMounted } from 'vue'
 
 const emit = defineEmits(['next', 'back'])
@@ -10,7 +11,7 @@ const loading = ref(false)
 
 const loadRules = async () => {
   try {
-    const res = await fetch('/api/rules')
+    const res = await fetch(getApiUrl('/api/rules'))
     if (res.ok) {
       const data = await res.json()
       avoidList.value = data.avoid || []
@@ -52,7 +53,7 @@ const removeLike = (item) => {
 const lockCalibration = async () => {
   loading.value = true
   try {
-    await fetch('/api/rules', {
+    await fetch(getApiUrl('/api/rules'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

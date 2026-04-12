@@ -1,4 +1,5 @@
 <script setup>
+import { getApiUrl } from '../lib/utils.js'
 import { ref, onMounted } from 'vue'
 
 const avoidRules = ref('')
@@ -8,7 +9,7 @@ const saveStatus = ref(null)
 
 const fetchRules = async () => {
   try {
-    const res = await fetch('/api/rules')
+    const res = await fetch(getApiUrl('/api/rules'))
     if (res.ok) {
       const data = await res.json()
       avoidRules.value = Array.isArray(data.avoid) ? data.avoid.join(', ') : (data.avoid || '')
@@ -27,7 +28,7 @@ const saveRules = async () => {
   const likeArray = likeRules.value.split(',').map(s => s.trim()).filter(Boolean)
 
   try {
-    const res = await fetch('/api/rules', {
+    const res = await fetch(getApiUrl('/api/rules'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

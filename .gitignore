@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.Python
+
+frontend/node_modules/
+frontend/dist/
+
+backend/data/config.json
+backend/data/rules.json

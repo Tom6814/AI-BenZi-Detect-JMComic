@@ -1,4 +1,5 @@
 <script setup>
+import { getApiUrl } from '../../lib/utils.js'
 import { ref, onMounted } from 'vue'
 
 const emit = defineEmits(['next'])
@@ -11,7 +12,7 @@ const errorMsg = ref('')
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/config/get')
+    const res = await fetch(getApiUrl('/api/config/get'))
     if (res.ok) {
       const data = await res.json()
       if (data && data.api_key) {
@@ -35,7 +36,7 @@ const testConnection = async () => {
   errorMsg.value = ''
   
   try {
-    const res = await fetch('/api/config/test', {
+    const res = await fetch(getApiUrl('/api/config/test'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -48,7 +49,7 @@ const testConnection = async () => {
     
     if (res.ok) {
       // Save config if test passed
-      await fetch('/api/config/save', {
+      await fetch(getApiUrl('/api/config/save'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
