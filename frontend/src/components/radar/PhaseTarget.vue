@@ -4,6 +4,7 @@ import { ref } from 'vue'
 const emit = defineEmits(['search-success', 'back'])
 const query = ref('')
 const loading = ref(false)
+const analyzing = ref(false)
 const searchResults = ref([])
 const hasSearched = ref(false)
 const errorMsg = ref('')
@@ -17,6 +18,7 @@ const initiateScan = async (targetId = null) => {
 
   // If it's pure number or an explicit ID was passed, identify directly
   if (targetId || /^\d+$/.test(searchQuery)) {
+    analyzing.value = true
     try {
       const res = await fetch(`/api/identify`, {
         method: 'POST',
@@ -37,6 +39,7 @@ const initiateScan = async (targetId = null) => {
       console.error(err)
     } finally {
       loading.value = false
+      analyzing.value = false
     }
   } else {
     // Otherwise, search JM
@@ -74,6 +77,22 @@ const initiateScan = async (targetId = null) => {
       <button @click="errorMsg = ''" class="ml-2 opacity-70 hover:opacity-100">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
+    </div>
+
+    <!-- Analyzing Overlay (Inspired by Tom6814's approach) -->
+    <div v-if="analyzing" class="absolute inset-0 z-40 bg-[var(--color-md-sys-surface)]/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 transition-all">
+      <div class="bg-[var(--color-md-sys-surface-variant)] border border-[var(--color-md-sys-outline-variant)] rounded-3xl p-10 flex flex-col items-center justify-center max-w-md w-full md-elevation-3">
+        <div class="relative w-20 h-20 mb-8">
+          <div class="absolute inset-0 border-4 border-[var(--color-md-sys-primary)]/20 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-[var(--color-md-sys-primary)] border-t-transparent rounded-full animate-spin"></div>
+          <svg class="absolute inset-0 m-auto w-8 h-8 text-[var(--color-md-sys-primary)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <h3 class="text-2xl font-medium text-[var(--color-md-sys-on-surface)] mb-3">AI 正在深度分析中...</h3>
+        <p class="text-[var(--color-md-sys-on-surface-variant)] text-center text-sm">
+          正在检索全网同人设定与评论数据<br/>
+          <span class="opacity-70">（思考过程已隐藏，请耐心等待结果）</span>
+        </p>
+      </div>
     </div>
 
     <div class="absolute top-8 left-8 md:top-12 md:left-12 z-20">
