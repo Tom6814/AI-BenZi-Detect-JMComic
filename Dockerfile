@@ -17,6 +17,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
 ENV DATA_DIR=/app/data
+ENV PYTHONPATH=/app/backend
 
 # Install Python dependencies
 COPY backend/requirements.txt ./backend/
