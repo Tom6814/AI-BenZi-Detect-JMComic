@@ -1,3 +1,5 @@
+import json
+import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import httpx
@@ -8,11 +10,20 @@ router = APIRouter(
     tags=["config"]
 )
 
+CONFIG_FILE = "data/config.json"
+
 class ConnectionTestRequest(BaseModel):
     provider: str  # "openai" or "gemini"
     api_key: str
     base_url: str = None
     model: str = None
+
+@router.post("/save")
+def save_config(req: ConnectionTestRequest):
+    os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(req.model_dump(), f, ensure_ascii=False, indent=2)
+    return {"status": "success"}
 
 @router.post("/test")
 async def test_connection(req: ConnectionTestRequest):

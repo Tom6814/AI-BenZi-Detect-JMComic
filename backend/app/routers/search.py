@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Optional
+from app.services.jm_service import fetch_jm_album, search_jm_albums
 
 router = APIRouter(
     prefix="/api/search",
@@ -9,29 +10,26 @@ router = APIRouter(
 @router.get("")
 async def search(query: str = Query(..., description="Search query string")):
     if query.isdigit():
-        return {
-            "type": "exact",
-            "id": int(query),
-            "title": f"Mock Exact Match for {query}"
-        }
+        # fetch directly by id to confirm existence
+        album = fetch_jm_album(query)
+        if album:
+            return {
+                "type": "exact",
+                "id": int(query),
+                "title": album["title"],
+                "cover": album.get("cover_url", "")
+            }
+        else:
+            return {
+                "type": "exact",
+                "id": int(query),
+                "title": f"未找到该本子: {query}"
+            }
     else:
+        results = search_jm_albums(query)
+        # Limit to top 10 to keep it clean
+        items = results[:10] if results else []
         return {
             "type": "list",
-            "items": [
-                {
-                    "id": 1,
-                    "title": f"Mock Result 1 for {query}",
-                    "cover": "https://example.com/cover1.jpg"
-                },
-                {
-                    "id": 2,
-                    "title": f"Mock Result 2 for {query}",
-                    "cover": "https://example.com/cover2.jpg"
-                },
-                {
-                    "id": 3,
-                    "title": f"Mock Result 3 for {query}",
-                    "cover": "https://example.com/cover3.jpg"
-                }
-            ]
+            "items": items
         }

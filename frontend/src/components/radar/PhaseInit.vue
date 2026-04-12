@@ -30,6 +30,17 @@ const testConnection = async () => {
     })
     
     if (res.ok) {
+      // Save config if test passed
+      await fetch('/api/config/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: provider.value,
+          api_key: apiKey.value,
+          base_url: baseUrl.value || undefined,
+          model: model.value || undefined
+        })
+      })
       emit('next')
     } else {
       const data = await res.json()

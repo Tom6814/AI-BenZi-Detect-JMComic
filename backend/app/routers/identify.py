@@ -6,6 +6,7 @@ import os
 import httpx
 from app.routers.rules import read_rules
 from app.core.utils import strip_think_tags
+from app.services.jm_service import fetch_jm_album
 
 router = APIRouter(
     prefix="/api/identify",
@@ -13,12 +14,13 @@ router = APIRouter(
 )
 
 class IdentifyRequest(BaseModel):
-    title: Optional[str] = "Mock Title - 魔法少女的陨落"
-    description: Optional[str] = "Mock Description - 这是一个关于魔法少女与触手怪物的黑暗奇幻故事..."
-    author: Optional[str] = "Mock Author - 黑深残老师"
-    tags: Optional[List[str]] = ["魔法少女", "触手", "战斗", "堕落"]
-    cover_url: Optional[str] = "http://example.com/mock-cover.jpg"
-    comments: Optional[List[str]] = ["画风极佳，但是剧情太胃疼了...", "纯爱战士应声倒地！", "触手画得很赞。"]
+    query: str  # Can be JM ID or something else. We'll prioritize JM ID here.
+    title: Optional[str] = "Mock Title"
+    description: Optional[str] = "Mock Description"
+    author: Optional[str] = "Mock Author"
+    tags: Optional[List[str]] = []
+    cover_url: Optional[str] = ""
+    comments: Optional[List[str]] = []
 
 class TagResult(BaseModel):
     tag: str
@@ -98,6 +100,18 @@ async def identify_content(req: IdentifyRequest):
     rules = read_rules()
     config = read_config()
     
+    # Try fetching real data from JM if query is an ID
+    if req.query.isdigit():
+        jm_album = fetch_jm_album(req.query)
+        if jm_album:
+            req.title = jm_album.get("title", req.title)
+            req.author = jm_album.get("author", req.author)
+            req.description = jm_album.get("description", req.description)
+            req.tags = jm_album.get("tags", req.tags)
+            req.cover_url = jm_album.get("cover_url", req.cover_url)
+            # Comments are harder to fetch in simple script, leaving empty or mock for now
+            req.comments = []
+
     # 组合用户 Prompt
     user_prompt = f"""
 作品信息：
@@ -106,7 +120,7 @@ async def identify_content(req: IdentifyRequest):
 - 标签：{', '.join(req.tags)}
 - 简介：{req.description}
 - 封面URL：{req.cover_url}
-- 评论：{', '.join(req.comments)}
+- 评论：{', '.join(req.comments) if req.comments else '无评论'}
 
 需要鉴定的规则清单：
 - 避雷清单 (avoid)：{', '.join(rules.avoid) if rules.avoid else '无'}
