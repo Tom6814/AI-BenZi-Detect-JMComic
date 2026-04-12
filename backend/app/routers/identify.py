@@ -147,21 +147,25 @@ async def identify_content(req: IdentifyRequest):
                 
             elif provider == "gemini":
                 base = base_url.rstrip('/') if base_url else "https://generativelanguage.googleapis.com/v1beta"
-                
+
                 # 兼容 GRSAI 等第三方 OpenAI 格式的 Gemini API (如：使用 chat/completions 调用 gemini)
-                if "openai" in base.lower() or base.endswith("/v1") or "/v1/" in base:
-                    url = f"{base}/chat/completions"
+                if "grsai" in base.lower() or "openai" in base.lower() or base.endswith("/v1") or "/v1/" in base:
+                    if "grsai" in base.lower() and not base.endswith("/v1") and "/v1/" not in base:
+                        url = f"{base}/v1/chat/completions"
+                    else:
+                        url = f"{base}/chat/completions"
+                        
                     headers = {
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json"
                     }
                     payload = {
                         "model": model,
+                        "stream": False,
                         "messages": [
                             {"role": "system", "content": SYSTEM_PROMPT},
                             {"role": "user", "content": user_prompt}
-                        ],
-                        "response_format": {"type": "json_object"}
+                        ]
                     }
                     resp = await client.post(url, headers=headers, json=payload)
                     resp.raise_for_status()
