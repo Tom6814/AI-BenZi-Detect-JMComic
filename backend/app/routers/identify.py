@@ -33,7 +33,9 @@ class IdentifyResponse(BaseModel):
     like: List[TagResult]
     reasoning: str
 
-CONFIG_FILE = "data/config.json"
+import os
+DATA_DIR = os.environ.get("DATA_DIR", "data")
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 
 def read_config():
     if not os.path.exists(CONFIG_FILE):
@@ -150,8 +152,11 @@ async def identify_content(req: IdentifyRequest):
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             if provider == "openai":
-                url = base_url or "https://api.openai.com/v1"
-                url = f"{url.rstrip('/')}/chat/completions"
+                base = base_url.rstrip('/') if base_url else "https://api.openai.com/v1"
+                if base != "https://api.openai.com/v1" and not base.endswith("/v1") and "/v1/" not in base:
+                    if "grsai" in base.lower() or "openai" in base.lower():
+                        base = f"{base}/v1"
+                url = f"{base}/chat/completions"
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
