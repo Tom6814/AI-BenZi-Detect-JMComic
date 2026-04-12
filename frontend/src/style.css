@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+@theme {
+  --color-md-sys-primary: #6750A4;
+  --color-md-sys-on-primary: #FFFFFF;
+  --color-md-sys-primary-container: #EADDFF;
+  --color-md-sys-on-primary-container: #21005D;
+  
+  --color-md-sys-secondary: #625B71;
+  --color-md-sys-on-secondary: #FFFFFF;
+  --color-md-sys-secondary-container: #E8DEF8;
+  --color-md-sys-on-secondary-container: #1D192B;
+  
+  --color-md-sys-tertiary: #7D5260;
+  --color-md-sys-on-tertiary: #FFFFFF;
+  --color-md-sys-tertiary-container: #FFD8E4;
+  --color-md-sys-on-tertiary-container: #31111D;
+  
+  --color-md-sys-error: #B3261E;
+  --color-md-sys-on-error: #FFFFFF;
+  --color-md-sys-error-container: #F9DEDC;
+  --color-md-sys-on-error-container: #410E0B;
+  
+  --color-md-sys-safe: #198754;
+  --color-md-sys-on-safe: #FFFFFF;
+  --color-md-sys-safe-container: #A3E4C7;
+  --color-md-sys-on-safe-container: #002111;
+
+  --color-md-sys-background: #FFFBFE;
+  --color-md-sys-on-background: #1C1B1F;
+  --color-md-sys-surface: #FFFBFE;
+  --color-md-sys-on-surface: #1C1B1F;
+  --color-md-sys-surface-variant: #E7E0EC;
+  --color-md-sys-on-surface-variant: #49454F;
+  --color-md-sys-outline: #79747E;
+  --color-md-sys-outline-variant: #CAC4D0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--color-md-sys-background);
+  color: var(--color-md-sys-on-background);
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* Soft background texture typical of MD3 */
+  background-image: radial-gradient(at 0% 0%, hsla(280,100%,94%,1) 0, transparent 50%), 
+                    radial-gradient(at 100% 100%, hsla(339,100%,94%,1) 0, transparent 50%);
+}
+
+/* Material 3 Expressive Elevation/Shadows */
+.md-elevation-1 {
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+}
+.md-elevation-2 {
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+}
+.md-elevation-3 {
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+}
+.md-elevation-4 {
+  box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.3), 0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+}
+.md-elevation-5 {
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.3), 0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Material 3 Expressive Shapes */
+.md-shape-small { border-radius: 8px; }
+.md-shape-medium { border-radius: 12px; }
+.md-shape-large { border-radius: 16px; }
+.md-shape-extra-large { border-radius: 28px; }
+.md-shape-full { border-radius: 9999px; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-md-sys-outline-variant);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-md-sys-outline);
+}
+
+/* Ripple effect base */
+.md-ripple {
+  position: relative;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+}
+.md-ripple::after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform .5s, opacity 1s;
+}
+.md-ripple:active::after {
+  transform: scale(0, 0);
+  opacity: .1;
+  transition: 0s;
+}
