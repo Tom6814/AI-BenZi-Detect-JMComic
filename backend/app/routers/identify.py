@@ -215,7 +215,7 @@ async def identify_content(req: IdentifyRequest):
                 
             # 清洗可能存在的 <think> 标签
             content = strip_think_tags(content)
-            
+
             # 尝试解析 JSON
             try:
                 # Some models might return markdown code blocks, e.g. ```json\n{...}\n```
@@ -227,15 +227,22 @@ async def identify_content(req: IdentifyRequest):
                 if content.endswith("```"):
                     content = content[:-3]
                 content = content.strip()
-                
+
                 result = json.loads(content)
                 return result
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="AI 返回的格式不是有效的 JSON")
+            except json.JSONDecodeError as je:
+                print(f"JSON 解析失败，AI原始返回内容为: {content}")
+                raise HTTPException(status_code=500, detail=f"AI 返回的格式不是有效的 JSON。请检查 AI 输出内容。")
 
+    except httpx.HTTPStatusError as e:
+        print(f"API HTTP 调用失败: {e.response.status_code} - {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"API Error: {e.response.text}")
+    except httpx.RequestError as e:
+        print(f"API 网络请求失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Network Error: {str(e)}")
+    except HTTPException:
+        # Re-raise FastApi HTTPExceptions
+        raise
     except Exception as e:
-        print(f"AI 调用失败: {str(e)}")
-        # If it's a known HTTP exception, re-raise it so the frontend can display the error
-        if isinstance(e, httpx.HTTPStatusError):
-            raise HTTPException(status_code=e.response.status_code, detail=f"API Error: {e.response.text}")
+        print(f"AI 调用内部错误: {str(e)}")
         raise HTTPException(status_code=500, detail=f"内部错误: {str(e)}")
