@@ -34,10 +34,22 @@ async def test_connection(req: ConnectionTestRequest):
             
     elif req.provider.lower() == "gemini":
         url = req.base_url or "https://generativelanguage.googleapis.com/v1beta"
+        # 修正 Gemini API 验证地址格式
         url = f"{url.rstrip('/')}/models?key={req.api_key}"
+        
+        # 很多代理中转站并不支持 /models 端点，我们使用最基础的模型生成请求来做连通性测试
+        # 构造简单的 generateContent 请求
+        base = req.base_url.rstrip('/') if req.base_url else "https://generativelanguage.googleapis.com/v1beta"
+        model_name = req.model or "gemini-1.5-pro"
+        test_url = f"{base}/models/{model_name}:generateContent?key={req.api_key}"
+        
+        payload = {
+            "contents": [{"parts": [{"text": "Hello"}]}]
+        }
+        
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(url)
+                resp = await client.post(test_url, json=payload)
                 if resp.status_code == 200:
                     return {"status": "success", "message": "Gemini connection successful"}
                 else:
