@@ -1,40 +1,39 @@
 <script setup>
-import { getApiUrl } from '../../lib/utils.js'
 import { ref, onMounted } from 'vue'
+import { getApiUrl } from '../../lib/utils.js'
 
 const emit = defineEmits(['next'])
+
 const provider = ref('openai')
 const apiKey = ref('')
 const baseUrl = ref('')
 const model = ref('')
+const enableReddit = ref(false)
+
 const loading = ref(false)
-const errorMsg = ref('')
+const testing = ref(false)
+const testResult = ref(null)
 
 onMounted(async () => {
   try {
-    const res = await fetch(getApiUrl('/api/config/get'))
+    const res = await fetch(getApiUrl('/api/config'))
     if (res.ok) {
       const data = await res.json()
-      if (data && data.api_key) {
-        provider.value = data.provider || 'openai'
-        apiKey.value = data.api_key || ''
-        baseUrl.value = data.base_url || ''
-        model.value = data.model || ''
-      }
+      if (data.provider) provider.value = data.provider
+      if (data.api_key) apiKey.value = data.api_key
+      if (data.base_url) baseUrl.value = data.base_url
+      if (data.model) model.value = data.model
+      if (data.enable_reddit !== undefined) enableReddit.value = data.enable_reddit
     }
   } catch (e) {
-    console.warn('Could not load existing config', e)
+    console.error('Failed to load config:', e)
   }
 })
 
 const testConnection = async () => {
-  if (!apiKey.value) {
-    errorMsg.value = 'API Key is required.'
-    return
-  }
-  loading.value = true
-  errorMsg.value = ''
-  
+  if (!apiKey.value) return
+  testing.value = true
+  testResult.value = null
   try {
     const res = await fetch(getApiUrl('/api/config/test'), {
       method: 'POST',
@@ -42,30 +41,41 @@ const testConnection = async () => {
       body: JSON.stringify({
         provider: provider.value,
         api_key: apiKey.value,
-        base_url: baseUrl.value || undefined,
-        model: model.value || undefined
+        base_url: baseUrl.value,
+        model: model.value
       })
     })
-    
     if (res.ok) {
-      // Save config if test passed
-      await fetch(getApiUrl('/api/config/save'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: provider.value,
-          api_key: apiKey.value,
-          base_url: baseUrl.value || undefined,
-          model: model.value || undefined
-        })
-      })
-      emit('next')
+      testResult.value = { success: true, msg: 'Connection Successful' }
     } else {
-      const data = await res.json()
-      errorMsg.value = data.detail || 'Connection failed.'
+      const err = await res.json().catch(() => ({}))
+      testResult.value = { success: false, msg: err.detail || 'Connection Failed' }
     }
   } catch (err) {
-    errorMsg.value = 'Network error. Backend not running?'
+    testResult.value = { success: false, msg: err.message }
+  } finally {
+    testing.value = false
+  }
+}
+
+const saveAndNext = async () => {
+  if (!apiKey.value) return
+  loading.value = true
+  try {
+    await fetch(getApiUrl('/api/config'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: provider.value,
+        api_key: apiKey.value,
+        base_url: baseUrl.value,
+        model: model.value,
+        enable_reddit: enableReddit.value
+      })
+    })
+    emit('next')
+  } catch (e) {
+    console.error('Failed to save config:', e)
   } finally {
     loading.value = false
   }
@@ -73,96 +83,128 @@ const testConnection = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center w-full min-h-full overflow-y-auto p-8 md:p-12 relative bg-[var(--color-md-sys-surface)]">
-    <div class="text-center mb-10 w-full max-w-lg">
-      <h2 class="text-4xl font-normal text-[var(--color-md-sys-on-surface)] mb-4 tracking-tight" style="font-family: 'Google Sans', 'Roboto', sans-serif;">
-        Setup Connection
+  <div class="flex flex-col items-center justify-center w-full h-full p-8 md:p-12 relative overflow-y-auto scrollbar-thin">
+    <!-- Title Area -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-[16px] bg-[var(--color-md-sys-primary-container)] text-[var(--color-md-sys-on-primary-container)] mb-6 md-elevation-1">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+      </div>
+      <h2 class="text-3xl font-normal text-[var(--color-md-sys-on-surface)] mb-2 tracking-tight" style="font-family: 'Google Sans', 'Roboto', sans-serif;">
+        System Configuration
       </h2>
-      <p class="text-[var(--color-md-sys-on-surface-variant)] text-body-large">
-        Configure your AI provider to begin the analysis sequence.
+      <p class="text-[var(--color-md-sys-on-surface-variant)] text-sm tracking-wide">
+        Initialize AI Core & API Access
       </p>
     </div>
 
-    <!-- MD3 Segmented Button (Provider Toggle) -->
-    <div class="flex shrink-0 border border-[var(--color-md-sys-outline)] rounded-full mb-10 overflow-hidden bg-transparent">
-      <button 
-        @click="provider = 'openai'" 
-        class="px-8 py-2.5 text-sm font-medium transition-colors md-ripple relative z-10"
-        :class="provider === 'openai' ? 'bg-[var(--color-md-sys-secondary-container)] text-[var(--color-md-sys-on-secondary-container)]' : 'text-[var(--color-md-sys-on-surface)] hover:bg-[var(--color-md-sys-surface-variant)]'"
-      >
-        <span class="flex items-center gap-2">
-          <svg v-if="provider === 'openai'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-          OpenAI
-        </span>
-      </button>
-      <div class="w-[1px] bg-[var(--color-md-sys-outline)]"></div>
-      <button 
-        @click="provider = 'gemini'" 
-        class="px-8 py-2.5 text-sm font-medium transition-colors md-ripple relative z-10"
-        :class="provider === 'gemini' ? 'bg-[var(--color-md-sys-secondary-container)] text-[var(--color-md-sys-on-secondary-container)]' : 'text-[var(--color-md-sys-on-surface)] hover:bg-[var(--color-md-sys-surface-variant)]'"
-      >
-        <span class="flex items-center gap-2">
-          <svg v-if="provider === 'gemini'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-          Gemini
-        </span>
-      </button>
-    </div>
-
-    <!-- Form Container (MD3 Text Fields) -->
-    <div class="w-full max-w-sm flex flex-col gap-6 relative z-10">
-      
-      <!-- Filled Text Field -->
-      <div class="relative bg-[var(--color-md-sys-surface-variant)] rounded-t-md border-b border-[var(--color-md-sys-on-surface-variant)] group focus-within:border-[var(--color-md-sys-primary)] focus-within:border-b-2 transition-all">
-        <label class="absolute top-2 left-4 text-xs text-[var(--color-md-sys-on-surface-variant)] group-focus-within:text-[var(--color-md-sys-primary)] transition-colors">API Key</label>
-        <input 
-          v-model="apiKey" 
-          type="password" 
-          class="w-full bg-transparent px-4 pt-6 pb-2 text-[var(--color-md-sys-on-surface)] focus:outline-none"
-          :placeholder="provider === 'openai' ? 'sk-...' : 'AIzaSy...'"
-        />
-      </div>
-
-      <div class="relative bg-[var(--color-md-sys-surface-variant)] rounded-t-md border-b border-[var(--color-md-sys-on-surface-variant)] group focus-within:border-[var(--color-md-sys-primary)] focus-within:border-b-2 transition-all">
-        <label class="absolute top-2 left-4 text-xs text-[var(--color-md-sys-on-surface-variant)] group-focus-within:text-[var(--color-md-sys-primary)] transition-colors">Base URL (Optional)</label>
-        <input 
-          v-model="baseUrl" 
-          type="text" 
-          class="w-full bg-transparent px-4 pt-6 pb-2 text-[var(--color-md-sys-on-surface)] focus:outline-none"
-        />
-      </div>
-
-      <div class="relative bg-[var(--color-md-sys-surface-variant)] rounded-t-md border-b border-[var(--color-md-sys-on-surface-variant)] group focus-within:border-[var(--color-md-sys-primary)] focus-within:border-b-2 transition-all">
-        <label class="absolute top-2 left-4 text-xs text-[var(--color-md-sys-on-surface-variant)] group-focus-within:text-[var(--color-md-sys-primary)] transition-colors">Model (Optional)</label>
-        <input 
-          v-model="model" 
-          type="text" 
-          class="w-full bg-transparent px-4 pt-6 pb-2 text-[var(--color-md-sys-on-surface)] focus:outline-none"
-        />
-      </div>
-
-      <div v-if="errorMsg" class="bg-[var(--color-md-sys-error-container)] text-[var(--color-md-sys-on-error-container)] p-4 rounded-md text-sm md-elevation-1">
-        {{ errorMsg }}
-      </div>
-
-      <div class="flex justify-end mt-4">
-        <button 
-          @click="testConnection" 
-          :disabled="loading"
-          class="md-ripple px-6 py-2.5 rounded-full font-medium transition-all flex items-center justify-center gap-2"
-          :class="loading ? 'bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] opacity-50 cursor-not-allowed' : 'bg-[var(--color-md-sys-primary)] text-[var(--color-md-sys-on-primary)] hover:md-elevation-2 active:md-elevation-1'"
+    <!-- Form Area -->
+    <div class="w-full max-w-sm flex flex-col gap-5">
+      <!-- Provider Selection -->
+      <div class="flex bg-[var(--color-md-sys-surface-variant)] p-1 rounded-2xl md-elevation-1">
+        <button
+          @click="provider = 'openai'"
+          class="flex-1 py-3 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 md-ripple"
+          :class="provider === 'openai' ? 'bg-[var(--color-md-sys-surface)] text-[var(--color-md-sys-primary)] shadow-sm' : 'text-[var(--color-md-sys-on-surface-variant)] hover:text-[var(--color-md-sys-on-surface)]'"
         >
-          <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          {{ loading ? 'Connecting...' : 'Connect' }}
+          OpenAI
+        </button>
+        <button
+          @click="provider = 'gemini'"
+          class="flex-1 py-3 text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 md-ripple"
+          :class="provider === 'gemini' ? 'bg-[var(--color-md-sys-surface)] text-[var(--color-md-sys-primary)] shadow-sm' : 'text-[var(--color-md-sys-on-surface-variant)] hover:text-[var(--color-md-sys-on-surface)]'"
+        >
+          Gemini
         </button>
       </div>
+
+      <!-- Inputs -->
+      <div class="space-y-4">
+        <div>
+          <input
+            v-model="apiKey"
+            type="password"
+            placeholder="API Key (Required)"
+            class="w-full bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] px-6 py-4 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-md-sys-primary)] outline-none placeholder-[var(--color-md-sys-outline)] transition-all duration-300 hover:bg-[var(--color-md-sys-surface-variant-hover)]"
+          />
+        </div>
+        <div>
+          <input
+            v-model="baseUrl"
+            type="text"
+            placeholder="Base URL (Optional proxy)"
+            class="w-full bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] px-6 py-4 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-md-sys-primary)] outline-none placeholder-[var(--color-md-sys-outline)] transition-all duration-300 hover:bg-[var(--color-md-sys-surface-variant-hover)]"
+          />
+        </div>
+        <div>
+          <input
+            v-model="model"
+            type="text"
+            :placeholder="provider === 'openai' ? 'Model (e.g. gpt-4o)' : 'Model (e.g. gemini-1.5-pro)'"
+            class="w-full bg-[var(--color-md-sys-surface-variant)] text-[var(--color-md-sys-on-surface-variant)] px-6 py-4 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-md-sys-primary)] outline-none placeholder-[var(--color-md-sys-outline)] transition-all duration-300 hover:bg-[var(--color-md-sys-surface-variant-hover)]"
+          />
+        </div>
+      </div>
+
+      <!-- Settings Toggle -->
+      <div class="flex items-center justify-between bg-[var(--color-md-sys-surface-variant)] px-6 py-4 rounded-2xl">
+        <div class="flex flex-col">
+          <span class="text-[var(--color-md-sys-on-surface)] font-medium text-sm">Reddit Context (Beta)</span>
+          <span class="text-[var(--color-md-sys-on-surface-variant)] text-xs">Search Reddit for reader feedback</span>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" v-model="enableReddit" class="sr-only peer">
+          <div class="w-11 h-6 bg-[var(--color-md-sys-outline-variant)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-md-sys-primary)]"></div>
+        </label>
+      </div>
+
+      <!-- Connection Test -->
+      <div class="flex flex-col gap-2 mt-2">
+        <button
+          @click="testConnection"
+          :disabled="testing || !apiKey"
+          class="text-sm font-medium text-[var(--color-md-sys-primary)] hover:text-[var(--color-md-sys-primary-container)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <svg v-if="testing" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.906 14.142 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+          Test Connection
+        </button>
+
+        <transition name="fade">
+          <div v-if="testResult" class="text-center text-sm p-3 rounded-xl border" :class="testResult.success ? 'bg-[var(--color-md-sys-safe-container)] text-[var(--color-md-sys-on-safe-container)] border-[var(--color-md-sys-safe)]' : 'bg-[var(--color-md-sys-error-container)] text-[var(--color-md-sys-on-error-container)] border-[var(--color-md-sys-error)]'">
+            {{ testResult.msg }}
+          </div>
+        </transition>
+      </div>
+
+      <!-- Next Button -->
+      <button
+        @click="saveAndNext"
+        :disabled="loading || !apiKey"
+        class="w-full py-4 bg-[var(--color-md-sys-primary)] text-[var(--color-md-sys-on-primary)] rounded-full text-lg font-bold tracking-widest uppercase hover:bg-[var(--color-md-sys-primary)] hover:shadow-[0_4px_12px_rgba(var(--color-md-sys-primary-rgb),0.3)] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed md-ripple"
+      >
+        <span v-if="!loading">Initialize</span>
+        <svg v-else class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.text-body-large {
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0.5px;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
 }
 </style>
