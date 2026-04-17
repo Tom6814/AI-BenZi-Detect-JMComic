@@ -14,6 +14,80 @@ const loading = ref(false)
 const testing = ref(false)
 const testResult = ref(null)
 
+const fileInput = ref(null)
+
+const triggerImport = () => {
+  fileInput.value.click()
+}
+
+const handleImport = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  
+  const reader = new FileReader()
+  reader.onload = async (ev) => {
+    try {
+      const importedData = JSON.parse(ev.target.result)
+      if (importedData.config) {
+        if (importedData.config.provider) provider.value = importedData.config.provider
+        if (importedData.config.api_key) apiKey.value = importedData.config.api_key
+        if (importedData.config.base_url) baseUrl.value = importedData.config.base_url
+        if (importedData.config.model) model.value = importedData.config.model
+        if (importedData.config.enable_reddit !== undefined) enableReddit.value = importedData.config.enable_reddit
+      }
+      
+      if (importedData.rules) {
+        await fetch(getApiUrl('/api/rules'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(importedData.rules)
+        })
+      }
+      
+      alert("Configuration imported successfully! Please click 'Initialize' to save config.")
+    } catch (err) {
+      alert("Invalid configuration file.")
+      console.error(err)
+    }
+  }
+  reader.readAsText(file)
+  e.target.value = ''
+}
+
+const handleExport = async () => {
+  try {
+    const rulesRes = await fetch(getApiUrl('/api/rules'))
+    const rulesData = await rulesRes.json()
+    
+    const configData = {
+      provider: provider.value,
+      api_key: apiKey.value,
+      base_url: baseUrl.value,
+      model: model.value,
+      enable_reddit: enableReddit.value
+    }
+    
+    const exportObj = {
+      config: configData,
+      rules: rulesData
+    }
+    
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ai_doujin_config_${new Date().getTime()}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    alert("Failed to export configuration.")
+    console.error(err)
+  }
+}
+
+
 onMounted(async () => {
   try {
     const res = await fetch(getApiUrl('/api/config'))
@@ -185,6 +259,19 @@ const saveAndNext = async () => {
         <span v-if="!loading">Initialize</span>
         <svg v-else class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
       </button>
+
+      <!-- Import / Export -->
+      <div class="flex justify-between items-center gap-4 mt-2">
+        <input type="file" ref="fileInput" @change="handleImport" accept=".json" class="hidden" />
+        <button @click="triggerImport" class="flex-1 py-3 text-xs font-bold text-[var(--color-md-sys-on-surface-variant)] uppercase tracking-wider rounded-xl transition-all duration-300 hover:bg-[var(--color-md-sys-surface-variant)] flex items-center justify-center gap-2 md-ripple">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Import
+        </button>
+        <button @click="handleExport" class="flex-1 py-3 text-xs font-bold text-[var(--color-md-sys-on-surface-variant)] uppercase tracking-wider rounded-xl transition-all duration-300 hover:bg-[var(--color-md-sys-surface-variant)] flex items-center justify-center gap-2 md-ripple">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Export
+        </button>
+      </div>
     </div>
   </div>
 </template>
