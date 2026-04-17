@@ -4,6 +4,7 @@ from typing import List, Optional
 import json
 import os
 import httpx
+import base64
 from app.routers.rules import read_rules
 from app.core.utils import strip_think_tags
 from app.services.jm_service import fetch_jm_album
@@ -34,7 +35,6 @@ class IdentifyResponse(BaseModel):
     like: List[TagResult]
     reasoning: str
 
-import os
 DATA_DIR = os.environ.get("DATA_DIR", "data")
 CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 
@@ -48,7 +48,7 @@ def read_config():
         return None
 
 SYSTEM_PROMPT = """你是一个极其严谨、经验丰富且懂ACG次文化的“专业同人志及漫画成分鉴定师”。
-你的任务是根据提供的作品信息（包括Reddit相关讨论），分析作品中是否包含用户指定的【避雷清单】（avoid）和【喜欢清单】（like）中的成分。
+你的任务是根据提供的作品信息（包括Reddit相关讨论和封面图片），分析作品中是否包含用户指定的【避雷清单】（avoid）和【喜欢清单】（like）中的成分。
 特别注意判定逻辑：
 1. 关于【纯女】的定义，是指“女角色除了男主以外，绝对没有被其他任何人碰过或操过”。如果有任何暗示被其他人碰过，即不属于纯女。
 2. 判定逻辑提示参考：如果没有明确说明或暗示，那么女主就是处女。
@@ -86,7 +86,7 @@ def get_mock_response(rules) -> dict:
             "probability": 0.95 if tag in ["NTR", "触手", "胃疼"] else 0.1,
             "reasoning": f"根据Mock数据，系统检测到可能存在{tag}成分..."
         })
-        
+
     like_results = []
     for tag in rules.like:
         like_results.append({
@@ -95,19 +95,32 @@ def get_mock_response(rules) -> dict:
             "probability": 0.88 if tag in ["纯爱", "魔法少女"] else 0.05,
             "reasoning": f"根据Mock数据，系统分析了{tag}成分的可能性..."
         })
-        
+
     return {
         "avoid": avoid_results,
         "like": like_results,
         "reasoning": "> **这是一份基于Mock数据的测试鉴定报告。**\n\n由于未配置AI API，系统返回了模拟数据。作品整体氛围偏向暗黑奇幻，含有明显触手要素，请纯爱读者谨慎阅读。"
     }
 
+async def fetch_image_as_base64(url: str):
+    if not url:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200:
+                ctype = resp.headers.get("content-type", "image/jpeg")
+                b64 = base64.b64encode(resp.content).decode('utf-8')
+                return f"data:{ctype};base64,{b64}"
+    except Exception as e:
+        print(f"Failed to fetch cover image {url}: {e}")
+    return None
+
 @router.post("", response_model=IdentifyResponse)
 async def identify_content(req: IdentifyRequest):
     rules = read_rules()
     config = read_config()
-    
-    # Try fetching real data from JM if query is an ID
+
     if req.query.isdigit():
         jm_album = fetch_jm_album(req.query)
         if jm_album:
@@ -116,40 +129,38 @@ async def identify_content(req: IdentifyRequest):
             req.description = jm_album.get("description", req.description)
             req.tags = jm_album.get("tags", req.tags)
             req.cover_url = jm_album.get("cover_url", req.cover_url)
-            # Use the fetched top 10 comments
             req.comments = jm_album.get("comments", [])
         else:
             raise HTTPException(status_code=404, detail="JM 图集未找到，可能是 ID 错误或被隐藏。")
 
-    
-    # Fetch Reddit Context
     reddit_context = ""
-    try:
-        reddit_posts = await search_reddit_posts(req.title)
-        if reddit_posts:
-            reddit_context = "以下是在 Reddit 上找到的相关讨论（供参考）：\n"
-            for p in reddit_posts:
-                reddit_context += f"- 【{p['title']}】: {p['content']}\n"
-    except Exception as e:
-        print("Reddit fetch error:", e)
+    if config and config.get("enable_reddit", False):
+        try:
+            reddit_posts = await search_reddit_posts(req.title)
+            if reddit_posts:
+                reddit_context = "以下是在 Reddit 上找到的相关讨论（供参考）：\n"
+                for p in reddit_posts:
+                    reddit_context += f"- 【{p['title']}】: {p['content']}\n"
+        except Exception as e:
+            print("Reddit fetch error:", e)
 
-    # 组合用户 Prompt
+    base64_image = await fetch_image_as_base64(req.cover_url) if req.cover_url else None
+
     user_prompt = f"""
 # Role
 你是一位极其严谨且经验丰富的“专业漫画及同人志成分鉴定师”。你的核心任务是保护读者的阅读体验，精准分析并预测作品中是否含有读者无法接受的“避雷”内容，同时标记出读者期待的“喜好”内容。
 
 # Task Workflow
-1. **信息审视**：仔细分析提供的漫画标题、简介、标签、评论以及 Reddit 上的相关讨论。
-2. **深度挖掘（联网/知识库）**：结合作者（{req.author}）的其他作品风格，获取更详尽的剧情走向、同人设定或读者排雷反馈。
+1. **信息审视**：仔细分析提供的漫画标题、简介、标签、评论以及附加的图片封面（如有）和 Reddit 上的相关讨论。
+2. **深度挖掘（联网/知识库）**：结合作者（{req.author}）的其他作品风格，获取更详尽的剧情走向、同人设定或读者排雷反馈。**鼓励你寻找或推测作品的生肉原名（日文名），以检索回忆更多的隐含剧情数据。**
 3. **精准匹配**：将漫画的实际内容与用户提供的【避雷清单】和【喜欢清单】进行逐一、严格的比对。注意“纯女”等特殊定义的严格约束，且默认女主为处女。
 4. **格式化输出**：严格按照 System Prompt 的 JSON 格式输出最终结论，保证输出内容丰富详细。
 
 # Input Data
-- 标题：{req.title}（可能是生肉或汉化名，请综合推测）
+- 标题：{req.title}
 - 作者：{req.author}
 - 标签：{', '.join(req.tags)}
 - 简介：{req.description}
-- 封面URL：{req.cover_url}
 - 评论区精选（最新15条，已自动过滤无关信息）：
 {chr(10).join(f"- {c}" for c in req.comments) if req.comments else '无评论'}
 
@@ -159,6 +170,7 @@ async def identify_content(req: IdentifyRequest):
 - 避雷清单 (avoid)：{', '.join(rules.avoid) if rules.avoid else '无'}
 - 喜欢清单 (like)：{', '.join(rules.like) if rules.like else '无'}
 """
+
     if not config or not config.get("api_key"):
         return get_mock_response(rules)
 
@@ -179,18 +191,22 @@ async def identify_content(req: IdentifyRequest):
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
                 }
+
+                content_arr = [{"type": "text", "text": user_prompt}]
+                if base64_image:
+                    content_arr.append({"type": "image_url", "image_url": {"url": base64_image}})
+
                 payload = {
                     "model": model,
                     "messages": [
                         {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt}
+                        {"role": "user", "content": content_arr}
                     ],
                     "response_format": {"type": "json_object"}
                 }
                 resp = await client.post(url, headers=headers, json=payload)
                 resp.raise_for_status()
                 data = resp.json()
-                # Check GRSAI errors
                 if isinstance(data, dict) and data.get("code") == -1:
                     raise Exception(data.get("msg", "Unknown API error from proxy"))
                 content = data["choices"][0]["message"]["content"]
@@ -208,30 +224,46 @@ async def identify_content(req: IdentifyRequest):
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json"
                     }
+                    
+                    content_arr = [{"type": "text", "text": user_prompt}]
+                    if base64_image:
+                        content_arr.append({"type": "image_url", "image_url": {"url": base64_image}})
+
                     payload = {
                         "model": model,
                         "stream": False,
                         "messages": [
                             {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": user_prompt}
+                            {"role": "user", "content": content_arr}
                         ]
                     }
                     resp = await client.post(url, headers=headers, json=payload)
                     resp.raise_for_status()
                     data = resp.json()
-                    # Check GRSAI errors
                     if isinstance(data, dict) and data.get("code") == -1:
                         raise Exception(data.get("msg", "Unknown API error from proxy"))
                     content = data["choices"][0]["message"]["content"]
                 else:
                     url = f"{base}/models/{model}:generateContent?key={api_key}"
                     headers = {"Content-Type": "application/json"}
+                    
+                    parts_arr = [{"text": user_prompt}]
+                    if base64_image:
+                        mime_type = base64_image.split(";")[0].split(":")[1]
+                        b64_data = base64_image.split(",")[1]
+                        parts_arr.append({
+                            "inlineData": {
+                                "mimeType": mime_type,
+                                "data": b64_data
+                            }
+                        })
+
                     payload = {
                         "systemInstruction": {
                             "parts": [{"text": SYSTEM_PROMPT}]
                         },
                         "contents": [
-                            {"role": "user", "parts": [{"text": user_prompt}]}
+                            {"role": "user", "parts": parts_arr}
                         ],
                         "generationConfig": {
                             "responseMimeType": "application/json"
@@ -243,13 +275,10 @@ async def identify_content(req: IdentifyRequest):
                     content = data["candidates"][0]["content"]["parts"][0]["text"]
             else:
                 return get_mock_response(rules)
-                
-            # 清洗可能存在的 <think> 标签
+
             content = strip_think_tags(content)
 
-            # 尝试解析 JSON
             try:
-                # Some models might return markdown code blocks, e.g. ```json\n{...}\n```
                 content = content.strip()
                 if content.startswith("```json"):
                     content = content[7:]
@@ -272,7 +301,6 @@ async def identify_content(req: IdentifyRequest):
         print(f"API 网络请求失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Network Error: {str(e)}")
     except HTTPException:
-        # Re-raise FastApi HTTPExceptions
         raise
     except Exception as e:
         print(f"AI 调用内部错误: {str(e)}")

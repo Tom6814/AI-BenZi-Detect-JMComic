@@ -1,41 +1,61 @@
 import json
 import os
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import httpx
-from app.core.utils import strip_think_tags
+from typing import Optional
 
 router = APIRouter(
     prefix="/api/config",
     tags=["config"]
 )
 
-import os
 DATA_DIR = os.environ.get("DATA_DIR", "data")
 CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 
-class ConnectionTestRequest(BaseModel):
-    provider: str  # "openai" or "gemini"
+class ConfigRequest(BaseModel):
+    provider: str
     api_key: str
-    base_url: str = None
-    model: str = None
+    base_url: Optional[str] = None
+    model: Optional[str] = None
+    enable_reddit: Optional[bool] = False
 
-@router.get("/get")
-def get_config():
-    if not os.path.exists(CONFIG_FILE):
-        return {}
-    try:
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+class ConnectionTestRequest(BaseModel):
+    provider: str
+    api_key: str
+    base_url: Optional[str] = None
+    model: Optional[str] = None
 
-@router.post("/save")
-def save_config(req: ConnectionTestRequest):
-    os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_config(config_data: dict):
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(req.model_dump(), f, ensure_ascii=False, indent=2)
-    return {"status": "success"}
+        json.dump(config_data, f, indent=4, ensure_ascii=False)
+
+@router.get("")
+async def get_config():
+    return load_config()
+
+@router.post("")
+async def update_config(req: ConfigRequest):
+    config_data = {
+        "provider": req.provider,
+        "api_key": req.api_key,
+        "base_url": req.base_url,
+        "model": req.model,
+        "enable_reddit": req.enable_reddit
+    }
+    save_config(config_data)
+    return {"status": "success", "message": "Config saved"}
 
 @router.post("/test")
 async def test_connection(req: ConnectionTestRequest):
