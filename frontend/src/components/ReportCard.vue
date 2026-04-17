@@ -1,16 +1,36 @@
 <template>
-  <div class="bg-[var(--color-md-sys-surface)] md-elevation-1 rounded-[24px] p-6 md:p-8 flex flex-col gap-8 w-full transition-shadow hover:md-elevation-2">
+  <div class="bg-[var(--color-md-sys-surface)] md-elevation-1 rounded-[24px] p-6 md:p-8 flex flex-col gap-8 w-full transition-shadow hover:md-elevation-2 relative overflow-hidden">
+    <!-- Background Glow based on score -->
+    <div v-if="data.score !== undefined" class="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[80px] pointer-events-none opacity-20" :style="{ backgroundColor: scoreColor }"></div>
     
     <!-- Header -->
-    <div class="flex items-center gap-4 pb-4 border-b border-[var(--color-md-sys-surface-variant)]">
-      <div class="p-3 bg-[var(--color-md-sys-secondary-container)] text-[var(--color-md-sys-on-secondary-container)] rounded-full">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[var(--color-md-sys-surface-variant)] relative z-10">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-[var(--color-md-sys-secondary-container)] text-[var(--color-md-sys-on-secondary-container)] rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <div>
+          <h3 class="text-[22px] font-normal leading-[28px] text-[var(--color-md-sys-on-surface)]" style="font-family: 'Google Sans', sans-serif;">
+            Evaluation Report
+          </h3>
+          <p class="text-sm text-[var(--color-md-sys-on-surface-variant)]">Based on your configured preferences</p>
+        </div>
       </div>
-      <div>
-        <h3 class="text-[22px] font-normal leading-[28px] text-[var(--color-md-sys-on-surface)]" style="font-family: 'Google Sans', sans-serif;">
-          Evaluation Report
-        </h3>
-        <p class="text-sm text-[var(--color-md-sys-on-surface-variant)]">Based on your configured preferences</p>
+
+      <!-- Score Visualizer -->
+      <div v-if="data.score !== undefined" class="flex items-center gap-4 bg-[var(--color-md-sys-surface-variant)] px-5 py-3 rounded-2xl border border-[var(--color-md-sys-outline-variant)] shadow-sm">
+        <div class="flex flex-col text-right">
+          <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-md-sys-on-surface-variant)]">AI Score</span>
+          <span class="text-sm font-medium" :style="{ color: scoreColor }">{{ scoreLabel }}</span>
+        </div>
+        
+        <div class="relative w-14 h-14 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 36 36">
+            <path class="text-[var(--color-md-sys-outline-variant)]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" />
+            <path :style="{ color: scoreColor }" class="transition-all duration-1000 ease-out drop-shadow-lg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" :stroke-dasharray="`${data.score}, 100`" />
+          </svg>
+          <span class="absolute text-lg font-black" :style="{ color: scoreColor }">{{ data.score }}</span>
+        </div>
       </div>
     </div>
 
@@ -86,6 +106,22 @@ const props = defineProps({
     required: true,
     default: () => ({ avoid: [], like: [], reasoning: '' })
   }
+})
+
+const scoreColor = computed(() => {
+  const s = props.data.score
+  if (s === undefined) return 'var(--color-md-sys-primary)'
+  if (s >= 80) return '#10B981' // Green
+  if (s >= 50) return '#F59E0B' // Yellow
+  return '#EF4444' // Red
+})
+
+const scoreLabel = computed(() => {
+  const s = props.data.score
+  if (s === undefined) return ''
+  if (s >= 80) return 'Safe'
+  if (s >= 50) return 'Caution'
+  return 'Danger'
 })
 
 const parsedReasoning = computed(() => {
