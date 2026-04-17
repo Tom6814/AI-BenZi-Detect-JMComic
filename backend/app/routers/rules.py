@@ -9,16 +9,18 @@ router = APIRouter(
     tags=["rules"]
 )
 
+from typing import Optional
 class RulesConfig(BaseModel):
     avoid: List[str]
     like: List[str]
+    additional_prompt: Optional[str] = ""
 
 import os
 DATA_DIR = os.environ.get("DATA_DIR", "data")
 DATA_FILE = os.path.join(DATA_DIR, "rules.json")
 
 def get_default_rules() -> RulesConfig:
-    return RulesConfig(avoid=[], like=[])
+    return RulesConfig(avoid=[], like=[], additional_prompt="")
 
 def read_rules() -> RulesConfig:
     if not os.path.exists(DATA_FILE):

@@ -171,6 +171,7 @@ async def identify_content(req: IdentifyRequest):
 # User Preferences
 - 避雷清单 (avoid)：{', '.join(rules.avoid) if rules.avoid else '无'}
 - 喜欢清单 (like)：{', '.join(rules.like) if rules.like else '无'}
+- 用户额外补充提示：{rules.additional_prompt if hasattr(rules, 'additional_prompt') and rules.additional_prompt else '无'}
 """
 
     if not config or not config.get("api_key"):
