@@ -1,16 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import RadarView from '../views/RadarView.vue'
+import LandingView from '../views/LandingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
+      name: 'landing',
+      component: LandingView
+    },
+    {
+      path: '/radar',
       name: 'radar',
       component: RadarView
     },
-    // Keep old routes under a layout for reference/testing if needed
     {
       path: '/classic',
       component: DefaultLayout,
