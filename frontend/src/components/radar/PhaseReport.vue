@@ -11,6 +11,7 @@ const emit = defineEmits(['reset'])
 const data = computed(() => {
   if (props.reportData && props.reportData.reasoning) return props.reportData
   return {
+    score: 15,
     avoid: [
       { tag: "NTR", contains: false, probability: 0.05, reasoning: "None found" },
       { tag: "Gore", contains: true, probability: 0.99, reasoning: "Blood visible" }
@@ -37,6 +38,9 @@ const exportReport = () => {
 
 const exportMarkdown = () => {
   let md = `# AI Doujinshi Analysis Report\n\n`
+  if (data.value.score !== undefined) {
+    md += `## 综合评分: ${data.value.score} / 100\n\n`
+  }
   md += `## 避雷警告 (Avoid)\n`
   data.value.avoid.forEach(item => {
     md += `- **${item.tag}**: ${item.contains ? '⚠️ 存在' : '✅ 安全'} (概率: ${(item.probability * 100).toFixed(0)}%)\n  - 理由: ${item.reasoning}\n`
