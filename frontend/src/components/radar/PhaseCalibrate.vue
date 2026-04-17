@@ -7,6 +7,7 @@ const avoidInput = ref('')
 const likeInput = ref('')
 const avoidList = ref([])
 const likeList = ref([])
+const additionalPrompt = ref('')
 const loading = ref(false)
 
 const loadRules = async () => {
@@ -16,6 +17,7 @@ const loadRules = async () => {
       const data = await res.json()
       avoidList.value = data.avoid || []
       likeList.value = data.like || []
+      additionalPrompt.value = data.additional_prompt || ''
     }
   } catch (err) {
     console.warn('Failed to load existing rules.')
@@ -58,7 +60,8 @@ const lockCalibration = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         avoid: avoidList.value,
-        like: likeList.value
+        like: likeList.value,
+        additional_prompt: additionalPrompt.value
       })
     })
     emit('next')
@@ -159,6 +162,24 @@ const lockCalibration = async () => {
         </div>
       </div>
 
+    </div>
+
+    <div class="mt-6 w-full">
+      <div class="bg-[var(--color-md-sys-surface-variant)] border border-[var(--color-md-sys-outline-variant)] rounded-[24px] p-5">
+        <div class="flex items-center gap-2 mb-3 text-[var(--color-md-sys-on-surface)]">
+          <svg class="w-5 h-5 text-[var(--color-md-sys-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          <h3 class="text-base font-medium">备注 / 补充信息</h3>
+        </div>
+        <p class="text-[var(--color-md-sys-on-surface-variant)] text-sm mb-3">
+          这里的内容会作为你的额外偏好说明一起发给 AI（例如：重点排查某角色是否非处、是否有强制、是否有暗示路人）。
+        </p>
+        <textarea
+          v-model="additionalPrompt"
+          rows="3"
+          placeholder="输入你的补充提示（可选）"
+          class="w-full bg-[var(--color-md-sys-surface)] text-[var(--color-md-sys-on-surface)] px-4 py-3 rounded-xl border border-[var(--color-md-sys-outline-variant)] focus:ring-2 focus:ring-[var(--color-md-sys-primary)] outline-none placeholder-[var(--color-md-sys-on-surface-variant)] resize-none transition-all duration-300"
+        ></textarea>
+      </div>
     </div>
 
     <!-- FAB / Floating Action Area -->

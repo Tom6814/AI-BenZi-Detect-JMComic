@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 
 const avoidRules = ref('')
 const likeRules = ref('')
+const additionalPrompt = ref('')
 const loading = ref(false)
 const saveStatus = ref(null)
 
@@ -14,6 +15,7 @@ const fetchRules = async () => {
       const data = await res.json()
       avoidRules.value = Array.isArray(data.avoid) ? data.avoid.join(', ') : (data.avoid || '')
       likeRules.value = Array.isArray(data.like) ? data.like.join(', ') : (data.like || '')
+      additionalPrompt.value = data.additional_prompt || ''
     }
   } catch (error) {
     console.error('Failed to fetch rules:', error)
@@ -35,7 +37,8 @@ const saveRules = async () => {
       },
       body: JSON.stringify({
         avoid: avoidArray,
-        like: likeArray
+        like: likeArray,
+        additional_prompt: additionalPrompt.value
       })
     })
 
@@ -144,6 +147,30 @@ onMounted(() => {
         </div>
       </div>
 
+    </div>
+
+    <div class="liquid-glass p-8 rounded-3xl relative overflow-hidden group border border-white/10 hover:border-white/20 transition-colors duration-500">
+      <div class="absolute -top-24 -left-24 w-56 h-56 bg-[rgba(231,180,255,0.18)] blur-[60px] rounded-full group-hover:bg-[rgba(231,180,255,0.28)] transition-colors duration-500"></div>
+      <div class="relative z-10">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-[rgba(231,180,255,0.12)] border border-[rgba(231,180,255,0.35)] flex items-center justify-center text-[color:var(--md-sys-color-secondary)] shadow-[0_0_15px_rgba(231,180,255,0.2)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+              <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold tracking-wider text-white/90">REMARKS / ADDITIONAL INFO</h2>
+        </div>
+        <p class="text-white/50 text-sm mb-4 font-mono">
+          Optional. This note will be sent to AI as extra guidance.
+        </p>
+        <textarea
+          v-model="additionalPrompt"
+          rows="4"
+          class="w-full bg-[rgba(0,0,0,0.4)] border border-white/10 rounded-xl p-4 text-white/90 focus:outline-none focus:border-[rgba(231,180,255,0.6)] focus:ring-1 focus:ring-[rgba(231,180,255,0.6)] transition-all duration-300 resize-none font-mono placeholder-white/20"
+          placeholder="e.g. 重点关注：女主是否被路人碰过、是否有暗示非处、是否有强制或NTR..."
+        ></textarea>
+      </div>
     </div>
   </div>
 </template>
