@@ -98,27 +98,42 @@ const exportHTML = () => {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI Doujinshi Report</title>
+  <title>${data.value.title || 'AI Doujinshi Report'}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0A0A0A; color: #fff; padding: 40px; }
-    .container { max-w-4xl; margin: 0 auto; background: #1A1A1A; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    h1 { color: #A855F7; text-align: center; }
-    .score { text-align: center; font-size: 48px; font-weight: 900; margin: 20px 0; color: ${data.value.score >= 80 ? '#10B981' : data.value.score >= 50 ? '#F59E0B' : '#EF4444'}; }
+    .container { max-width: 900px; margin: 0 auto; background: #1A1A1A; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; padding-bottom: 30px; margin-bottom: 30px; }
+    .cover { width: 120px; height: 160px; object-fit: cover; border-radius: 12px; border: 1px solid #333; }
+    .header-info { flex: 1; }
+    .header-info h1 { color: #fff; margin: 0 0 10px 0; font-size: 28px; line-height: 1.3; }
+    .header-info p { color: #9CA3AF; margin: 0; font-size: 16px; }
+    .score-box { text-align: right; }
+    .score-label { font-size: 12px; color: #6B7280; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; margin-bottom: 5px; }
+    .score { font-size: 56px; font-weight: 900; line-height: 1; color: ${data.value.score >= 80 ? '#10B981' : data.value.score >= 50 ? '#F59E0B' : '#EF4444'}; }
     .section { margin-top: 30px; }
-    .section h2 { border-bottom: 1px solid #333; padding-bottom: 10px; color: #E5E7EB; }
-    .tag-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .section h2 { border-bottom: 1px solid #333; padding-bottom: 10px; color: #E5E7EB; font-size: 20px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
     .tag { padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
     .tag.avoid-true { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
     .tag.avoid-false { background: #262626; color: #9ca3af; }
     .tag.like-true { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
     .tag.like-false { background: #262626; color: #9ca3af; }
-    .reasoning { background: #262626; padding: 20px; border-radius: 16px; line-height: 1.6; margin-top: 20px; }
+    .reasoning { background: #262626; padding: 24px; border-radius: 16px; line-height: 1.8; margin-top: 20px; font-size: 15px; color: #D1D5DB; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>AI Doujinshi Radar Report</h1>
-    ${data.value.score !== undefined ? `<div class="score">${data.value.score} / 100</div>` : ''}
+    <div class="header">
+      ${data.value.cover_url ? `<img src="${data.value.cover_url}" class="cover" alt="cover"/>` : ''}
+      <div class="header-info">
+        <h1>${data.value.title || 'AI Neural Evaluation Report'}</h1>
+        <p>Author: ${data.value.author || 'Unknown'}</p>
+      </div>
+      <div class="score-box">
+        <div class="score-label">AI Score</div>
+        ${data.value.score !== undefined ? `<div class="score">${data.value.score}</div>` : ''}
+      </div>
+    </div>
     
     <div class="section">
       <h2>Avoid (Red Flags)</h2>

@@ -35,6 +35,9 @@ class IdentifyResponse(BaseModel):
     avoid: List[TagResult]
     like: List[TagResult]
     reasoning: str
+    title: Optional[str] = ""
+    cover_url: Optional[str] = ""
+    author: Optional[str] = "" 
 
 DATA_DIR = os.environ.get("DATA_DIR", "data")
 CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
@@ -104,7 +107,10 @@ def get_mock_response(rules) -> dict:
         "score": 35,
         "avoid": avoid_results,
         "like": like_results,
-        "reasoning": "> **这是一份基于Mock数据的测试鉴定报告。**\n\n由于未配置AI API，系统返回了模拟数据。作品整体氛围偏向暗黑奇幻，含有明显触手要素，请纯爱读者谨慎阅读。"
+        "reasoning": "> **这是一份基于Mock数据的测试鉴定报告。**\n\n由于未配置AI API，系统返回了模拟数据。作品整体氛围偏向暗黑奇幻，含有明显触手要素，请纯爱读者谨慎阅读。",
+        "title": "Mock Title",
+        "cover_url": "",
+        "author": "Mock Author"
     }
 
 async def fetch_image_as_base64(url: str):
@@ -295,6 +301,9 @@ async def identify_content(req: IdentifyRequest):
                 content = content.strip()
 
                 result = json.loads(content)
+                result["title"] = req.title
+                result["cover_url"] = req.cover_url
+                result["author"] = req.author
                 return result
             except json.JSONDecodeError as je:
                 print(f"JSON 解析失败，AI原始返回内容为: {content}")
