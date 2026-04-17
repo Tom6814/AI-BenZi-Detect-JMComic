@@ -23,7 +23,7 @@ def fetch_jm_album(album_id: str):
                     text = c.get('comment', '')
                     addtime = int(c.get('addtime', 0)) if str(c.get('addtime', 0)).isdigit() else 0
                     parsed_comments.append({"text": text, "time": addtime})
-                
+
                 parsed_comments.sort(key=lambda x: x["time"], reverse=True)
                 top_15 = parsed_comments[:15]
                 comments_texts = [c["text"] for c in top_15]
@@ -36,7 +36,7 @@ def fetch_jm_album(album_id: str):
             "author": author_str,
             "description": album.description if album.description else "无简介",
             "tags": tags,
-            "cover_url": album.cover_url if hasattr(album, 'cover_url') else "",
+            "cover_url": f"https://{client.domain_list[0]}/media/albums/{album_id}.jpg",
             "comments": comments_texts
         }
     except Exception as e:
@@ -51,10 +51,13 @@ def search_jm_albums(query: str):
         for album_tuple in search_page:
             if isinstance(album_tuple, tuple) and len(album_tuple) == 2:
                 album_id, album_info = album_tuple
+                title = album_info if isinstance(album_info, str) else getattr(album_info, 'name', '') or getattr(album_info, 'title', '')
+                if isinstance(album_info, dict):
+                    title = album_info.get('name', album_info.get('title', str(album_info)))
                 results.append({
                     "id": album_id,
-                    "title": album_info.get('name', ''),
-                    "cover": album_info.get('image', '')
+                    "title": title,
+                    "cover": f"https://{client.domain_list[0]}/media/albums/{album_id}.jpg"
                 })
         return results
     except Exception as e:
