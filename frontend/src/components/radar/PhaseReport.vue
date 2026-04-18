@@ -173,7 +173,7 @@ const exportImage = async () => {
   }
 }
 
-const downloadBlob = (blob, filename) => {
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -195,7 +195,7 @@ const downloadBlob = (blob, filename) => {
     ></div>
 
     <!-- Controls Bar -->
-    <div class="w-full max-w-4xl flex justify-between items-center z-20 mb-8 mt-2">
+    <div class="w-full max-w-4xl flex justify-between items-center z-50 mb-8 mt-2 relative">
       <button @click="emit('reset')" class="group px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-all flex items-center gap-2 text-sm font-medium backdrop-blur-sm">
         <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         New Scan

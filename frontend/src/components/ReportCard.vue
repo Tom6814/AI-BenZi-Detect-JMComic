@@ -30,6 +30,28 @@ const parsedReasoning = computed(() => {
 
 const avoidHits = computed(() => props.data.avoid?.filter(t => t.contains).length || 0)
 const likeHits = computed(() => props.data.like?.filter(t => t.contains).length || 0)
+const watchUrl = computed(() => {
+  if (props.data.album_id) {
+    return `https://web.jmcomic.uk/detail/${props.data.album_id}`
+  }
+  return '#'
+})
+
+const buttonStyle = computed(() => {
+  const s = props.data.score
+  if (s === undefined) return 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)] border-purple-400'
+  if (s >= 80) return 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border-emerald-400'
+  if (s >= 31) return 'bg-amber-600 hover:bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)] border-amber-400'
+  return 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] border-red-400'
+})
+
+const buttonText = computed(() => {
+  const s = props.data.score
+  if (s === undefined) return '前往观看'
+  if (s >= 80) return '火速食用'
+  if (s >= 31) return '前往观看'
+  return '我已知晓，无视风险继续观看'
+})
 </script>
 
 <template>
@@ -60,7 +82,7 @@ const likeHits = computed(() => props.data.like?.filter(t => t.contains).length 
         <!-- Visual Score Gauge -->
         <div v-if="data.score !== undefined" class="flex items-center gap-5 bg-black/40 px-6 py-4 rounded-2xl border border-white/5 shadow-inner backdrop-blur-md">
           <div class="flex flex-col text-right">
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-1">Threat Level</span>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 mb-1">Threat Level</span>
             <span class="text-lg font-black tracking-wider" :style="{ color: scoreColor }">{{ scoreLabel }}</span>
           </div>
           
@@ -97,7 +119,7 @@ const likeHits = computed(() => props.data.like?.filter(t => t.contains).length 
                  class="relative px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                  :class="item.contains 
                     ? 'bg-red-500/20 border-red-500/40 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
-                    : 'bg-black/40 border-white/5 text-gray-500'">
+                    : 'bg-black/40 border-white/5 text-gray-300'">
               <svg v-if="item.contains" class="w-4 h-4 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               <svg v-else class="w-4 h-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
               {{ item.tag }}
@@ -124,7 +146,7 @@ const likeHits = computed(() => props.data.like?.filter(t => t.contains).length 
                  class="relative px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                  :class="item.contains 
                     ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
-                    : 'bg-black/40 border-white/5 text-gray-500'">
+                    : 'bg-black/40 border-white/5 text-gray-300'">
               <svg v-if="item.contains" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
               <svg v-else class="w-4 h-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
               {{ item.tag }}
@@ -142,14 +164,21 @@ const likeHits = computed(() => props.data.like?.filter(t => t.contains).length 
           Neural Network Reasoning
         </h4>
         
-        <div class="prose prose-invert prose-purple max-w-none 
-          prose-h2:text-xl prose-h2:font-bold prose-h2:text-gray-200 prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-2
-          prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-base
-          prose-strong:text-white prose-strong:font-bold
-          prose-ul:list-disc prose-ul:text-gray-300 prose-li:my-1
-          prose-blockquote:border-l-purple-500 prose-blockquote:bg-purple-500/5 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic" 
-          v-html="parsedReasoning">
+        <div class="reasoning-content" v-html="parsedReasoning">
         </div>
+      </div>
+      
+      <!-- Go to Watch Button -->
+      <div class="mt-4 flex justify-center w-full relative z-20">
+        <a :href="watchUrl" target="_blank" rel="noopener noreferrer" 
+           class="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-white transition-all duration-300 rounded-2xl hover:scale-[1.02] active:scale-[0.98] border border-transparent overflow-hidden"
+           :class="buttonStyle">
+          <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+          <span class="relative flex items-center gap-3 text-lg tracking-wide">
+            <svg class="w-6 h-6 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            {{ buttonText }}
+          </span>
+        </a>
       </div>
 
     </div>
@@ -157,5 +186,61 @@ const likeHits = computed(() => props.data.like?.filter(t => t.contains).length 
 </template>
 
 <style>
-/* Prose overrides are handled by Tailwind Typography plugin via prose classes above */
+.reasoning-content {
+  color: #d1d5db; /* text-gray-300 */
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+.reasoning-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e5e7eb; /* text-gray-200 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reasoning-content p {
+  margin-bottom: 1rem;
+}
+
+.reasoning-content strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.reasoning-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reasoning-content li {
+  margin-bottom: 0.25rem;
+}
+
+.reasoning-content blockquote {
+  border-left: 4px solid #a855f7; /* purple-500 */
+  background-color: rgba(168, 85, 247, 0.05);
+  padding: 0.25rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin-bottom: 1rem;
+  font-style: normal;
+}
+
+/* First line highlight */
+.reasoning-content > p:first-of-type {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #f3f4f6; /* text-gray-100 */
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #a855f7;
+  padding-left: 1rem;
+}
 </style>
