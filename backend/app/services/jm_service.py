@@ -13,22 +13,22 @@ def fetch_jm_album(album_id: str):
 
         comments_texts = []
         try:
-            from jmcomic.jm_client_impl import JmHtmlClient
-            html_client = JmHtmlClient(client.postman, client.get_domain_list())
-            html_resp = html_client.get(f'/ajax/comment?aid={album_id}')
-            data = html_resp.json()
-            if 'data' in data and data['data']:
-                parsed_comments = []
-                for c in data['data']:
-                    text = c.get('comment', '')
-                    addtime = int(c.get('addtime', 0)) if str(c.get('addtime', 0)).isdigit() else 0
-                    parsed_comments.append({"text": text, "time": addtime})
-
-                parsed_comments.sort(key=lambda x: x["time"], reverse=True)
-                top_15 = parsed_comments[:15]
-                comments_texts = [c["text"] for c in top_15]
+            # 官方移动端API获取评论
+            resp = client.req_api(f'/forum?mode=manhua&aid={album_id}&page=1')
+            if resp and hasattr(resp, 'res_data') and isinstance(resp.res_data, dict):
+                c_list = resp.res_data.get('list', [])
+                if c_list:
+                    import re as regex
+                    parsed_comments = []
+                    for c in c_list:
+                        raw_text = c.get('content', '')
+                        # 去除HTML标签 (例如 <div...>)
+                        clean_text = regex.sub(r'<[^>]+>', '', raw_text).strip()
+                        if clean_text:
+                            parsed_comments.append(clean_text)
+                    comments_texts = parsed_comments[:15]
         except Exception as html_ce:
-            print(f"Failed to fetch comments via HTML: {html_ce}")
+            print(f"Failed to fetch comments via API: {html_ce}")
 
         return {
             "id": album.album_id,
