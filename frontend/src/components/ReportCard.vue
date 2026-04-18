@@ -186,17 +186,61 @@ const buttonText = computed(() => {
 </template>
 
 <style>
-/* Prose overrides are handled by Tailwind Typography plugin via prose classes above */
-.first-line-highlight > p:first-of-type {
+.reasoning-content {
+  color: #d1d5db; /* text-gray-300 */
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+.reasoning-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e5e7eb; /* text-gray-200 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reasoning-content p {
+  margin-bottom: 1rem;
+}
+
+.reasoning-content strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.reasoning-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reasoning-content li {
+  margin-bottom: 0.25rem;
+}
+
+.reasoning-content blockquote {
+  border-left: 4px solid #a855f7; /* purple-500 */
+  background-color: rgba(168, 85, 247, 0.05);
+  padding: 0.25rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin-bottom: 1rem;
+  font-style: normal;
+}
+
+/* First line highlight */
+.reasoning-content > p:first-of-type {
   font-size: 1.25rem;
   font-weight: 900;
   color: #f3f4f6; /* text-gray-100 */
   line-height: 1.6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
   margin-bottom: 1.5rem;
-  border-left: 4px solid var(--color-md-sys-primary, #a855f7);
+  border-left: 4px solid #a855f7;
   padding-left: 1rem;
 }
 </style>
