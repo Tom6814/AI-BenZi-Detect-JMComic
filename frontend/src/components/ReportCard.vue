@@ -164,13 +164,7 @@ const buttonText = computed(() => {
           Neural Network Reasoning
         </h4>
         
-        <div class="prose prose-invert prose-purple max-w-none 
-          prose-h2:text-xl prose-h2:font-bold prose-h2:text-gray-200 prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-2
-          prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-base
-          prose-strong:text-white prose-strong:font-bold
-          prose-ul:list-disc prose-ul:text-gray-300 prose-li:my-1
-          prose-blockquote:border-l-purple-500 prose-blockquote:bg-purple-500/5 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic" 
-          v-html="parsedReasoning">
+        <div class="reasoning-content" v-html="parsedReasoning">
         </div>
       </div>
       
