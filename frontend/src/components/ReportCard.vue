@@ -204,6 +204,36 @@ const buttonText = computed(() => {
 </template>
 
 <style>
+
+/* HTML2Canvas Background Color Fixes */
+.bg-black\/20 { background-color: rgba(0, 0, 0, 0.2) !important; }
+.bg-black\/40 { background-color: rgba(0, 0, 0, 0.4) !important; }
+.bg-purple-500\/20 { background-color: rgba(168, 85, 247, 0.2) !important; }
+.bg-blue-500\/20 { background-color: rgba(59, 130, 246, 0.2) !important; }
+.border-white\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
+.border-white\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
+.border-purple-500\/30 { border-color: rgba(168, 85, 247, 0.3) !important; }
+.border-blue-500\/30 { border-color: rgba(59, 130, 246, 0.3) !important; }
+
+/* Fix html2canvas text color issues with specific Tailwind utilities */
+.text-gray-100 { color: #f3f4f6 !important; }
+.text-gray-200 { color: #e5e7eb !important; }
+.text-gray-300 { color: #d1d5db !important; }
+.text-gray-400 { color: #9ca3af !important; }
+.text-gray-800 { color: #1f2937 !important; }
+.text-white { color: #ffffff !important; }
+.text-purple-300 { color: #d8b4fe !important; }
+.text-purple-400 { color: #c084fc !important; }
+.text-emerald-300 { color: #6ee7b7 !important; }
+.text-emerald-400 { color: #34d399 !important; }
+.text-red-300 { color: #fca5a5 !important; }
+.text-red-400 { color: #f87171 !important; }
+.text-blue-300 { color: #93c5fd !important; }
+.text-blue-400 { color: #60a5fa !important; }
+.text-purple-300 { color: #d8b4fe !important; }
+.text-gray-600 { color: #4b5563 !important; }
+.text-blue-400 { color: #60a5fa !important; }
+
 .reasoning-content {
   color: #d1d5db; /* text-gray-300 */
   line-height: 1.75;
