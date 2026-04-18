@@ -30,13 +30,26 @@ def fetch_jm_album(album_id: str):
         except Exception as html_ce:
             print(f"Failed to fetch comments via API: {html_ce}")
 
+        cover_url = f"https://{client.domain_list[0]}/media/albums/{album_id}.jpg"
+        cover_base64 = cover_url
+        try:
+            import urllib.request
+            import base64
+            req = urllib.request.Request(cover_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                img_data = response.read()
+                b64_str = base64.b64encode(img_data).decode('utf-8')
+                cover_base64 = f"data:image/jpeg;base64,{b64_str}"
+        except Exception as e:
+            print(f"Failed to fetch and base64 encode cover: {e}")
+
         return {
             "id": album.album_id,
             "title": album.title,
             "author": author_str,
             "description": album.description if album.description else "无简介",
             "tags": tags,
-            "cover_url": f"https://{client.domain_list[0]}/media/albums/{album_id}.jpg",
+            "cover_url": cover_base64,
             "comments": comments_texts
         }
     except Exception as e:

@@ -98,6 +98,24 @@ const buttonText = computed(() => {
         </div>
       </div>
 
+            <!-- Album Info Area -->
+      <div v-if="data.album_id" class="flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-black/20 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-sm">
+        <div class="w-32 sm:w-40 flex-shrink-0 overflow-hidden rounded-xl border border-white/10 shadow-xl relative bg-black/40">
+          <img v-if="data.cover_url" :src="data.cover_url" alt="Cover" class="w-full h-auto object-cover aspect-[3/4]" referrerpolicy="no-referrer" />
+          <div v-else class="w-full aspect-[3/4] flex items-center justify-center text-gray-600">No Cover</div>
+        </div>
+        <div class="flex flex-col flex-1 text-center sm:text-left h-full justify-center mt-2 sm:mt-0">
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3">
+            <span class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-black tracking-wider border border-purple-500/30">JM{{ data.album_id }}</span>
+            <span v-if="data.author && data.author !== 'Unknown'" class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              {{ data.author }}
+            </span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-100 leading-snug line-clamp-3 mb-2" :title="data.title">{{ data.title || '未知标题' }}</h2>
+        </div>
+      </div>
+
       <!-- Tag Sections -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         
