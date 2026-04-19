@@ -103,8 +103,8 @@ const buttonText = computed(() => {
             <!-- Album Info Area -->
       <div v-if="data.album_id" class="flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-black/20 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-sm">
         <div class="w-32 sm:w-40 flex-shrink-0 overflow-hidden rounded-xl border border-white/10 shadow-xl relative bg-black/40">
-          <img v-if="data.cover_url" :src="data.cover_url" alt="Cover" class="w-full h-auto object-cover aspect-[3/4]" referrerpolicy="no-referrer" />
-          <div v-else class="w-full aspect-[3/4] flex items-center justify-center text-gray-600">No Cover</div>
+          <img v-if="data.cover_url" :src="data.cover_url" alt="Cover" class="w-full h-auto object-cover aspect-[3/4] rounded-xl" referrerpolicy="no-referrer" />
+          <div v-else class="w-full aspect-[3/4] flex items-center justify-center text-gray-600 rounded-xl">No Cover</div>
         </div>
         <div class="flex flex-col flex-1 text-center sm:text-left h-full justify-center mt-2 sm:mt-0">
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3">

@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, nextTick } from 'vue'
 import ReportCard from '../ReportCard.vue'
 import confetti from 'canvas-confetti'
-import html2canvas from 'html2canvas-pro'
+import * as htmlToImage from 'html-to-image'
 
 const props = defineProps({
   reportData: Object
@@ -152,21 +152,65 @@ const exportHTML = () => {
 const exportImage = async () => {
   if (!reportRef.value) return
   isExportMenuOpen.value = false
-  
+
   // Wait for dropdown to close visually
   await nextTick()
-  
+
   try {
-    const canvas = await html2canvas(reportRef.value.$el || reportRef.value, {
+    const el = reportRef.value.$el || reportRef.value
+    const dataUrl = await htmlToImage.toPng(el, {
       backgroundColor: '#121212',
-      scale: 2,
-      useCORS: true,
-      logging: false
+      pixelRatio: 2,
+      skipFonts: false
     })
+
+    // Create a temporary link to download
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `ai_doujin_report_${new Date().getTime()}.png`
     
-    canvas.toBlob((blob) => {
-      downloadBlob(blob, `ai_doujin_report_${new Date().getTime()}.png`)
-    }, 'image/png', 1.0)
+    // For iOS Safari compatibility: open in new tab if download fails or if it's Safari
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    
+    // Attempt native share API first for mobile devices
+    if ((isIOS || /Android/i.test(navigator.userAgent)) && navigator.canShare) {
+      try {
+        const response = await fetch(dataUrl)
+        const blob = await response.blob()
+        const file = new File([blob], a.download, { type: 'image/png' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'AI 本子雷达分析报告',
+            text: '这是我用 AI 生成的本子雷达鉴定报告，快来看看吧！'
+          })
+          return
+        }
+      } catch (shareErr) {
+        console.warn('Share API failed or cancelled', shareErr)
+        // Fallthrough to manual download
+      }
+    }
+
+    if (isIOS || isSafari) {
+      // In iOS Safari, triggering download via a tag with base64 dataUrl sometimes fails silently
+      // Opening in a new window/tab allows the user to long-press and save
+      const win = window.open()
+      if (win) {
+        win.document.write(`<img src="${dataUrl}" style="width: 100%; height: auto;" />`)
+        win.document.title = "Long press to save"
+      } else {
+        // Fallback if popup blocker is active
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      }
+    } else {
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
   } catch (err) {
     console.error('Failed to export image', err)
     alert('Failed to generate image.')
