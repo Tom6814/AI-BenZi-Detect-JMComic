@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
-import { marked } from 'marked'
+import MarkdownIt from 'markdown-it'
+
+const md = new MarkdownIt({ html: true, breaks: true })
 
 const props = defineProps({
   data: Object
@@ -25,7 +27,7 @@ const scoreLabel = computed(() => {
 const parsedReasoning = computed(() => {
   if (!props.data.reasoning) return ''
   // Basic markdown parsing
-  return marked.parse(props.data.reasoning)
+  return md.render(props.data.reasoning)
 })
 
 const avoidHits = computed(() => props.data.avoid?.filter(t => t.contains).length || 0)
