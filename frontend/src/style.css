@@ -78,7 +78,7 @@ body {
   font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--color-md-sys-background);
   color: var(--color-md-sys-on-background);
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   /* Soft background texture typical of MD3 */
   background-image: radial-gradient(at 0% 0%, hsla(280,100%,94%,1) 0, transparent 50%), 
